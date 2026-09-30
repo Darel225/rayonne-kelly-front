@@ -35,15 +35,15 @@ export default function BookingDetails() {
 
         setBooking(bookingData);
 
-        if (bookingData.residence_slug) {
+        if (bookingData.residence_id) {
           try {
-            const residenceRes = await api.get(`/residences/${bookingData.residence_slug}`, { signal: controller.signal });
+            const residenceRes = await api.get(`/admin/residences/${bookingData.residence_id}`, { signal: controller.signal });
             if (isMounted) {
               setResidence(residenceRes?.data || residenceRes);
             }
           } catch (rErr) {
-            console.warn("Impossible de charger les détails de la résidence:", rErr);
-            // On continue, la vue de la réservation fonctionnera de façon dégradée (robustesse)
+            console.error("Erreur de chargement de la résidence (ID:", bookingData.residence_id, ")", rErr);
+            toast.error("Impossible de charger les détails de la résidence associée.");
           }
         }
       } catch (err) {
