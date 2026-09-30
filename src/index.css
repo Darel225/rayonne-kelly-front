@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --color-royal: #2350E0;
+  --color-royal-dark: #1B3FB8;
+  --color-ivory: #FAFAF8;
+  --color-snow: #FFFFFF;
+  --color-mist: #F3F4F6;
+  --color-night: #0B1426;
+  --color-night-soft: #131F38;
+  --color-gold: #C9A96E;
+  --color-gold-light: #E8D9B5;
+  --color-gold-dark: #A88B4A;
+  --color-ink: #1A1A1A;
+  --color-ink-muted: #6B7280;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-ivory);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  body,
+  p, h1, h2, h3, h4, h5, h6,
+  span, a, li, td, th,
+  input, textarea, label {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+}
+
+@layer utilities {
+  .text-safe {
+    overflow-wrap: break-word;
+    word-break: break-word;
+    min-width: 0;
+  }
+}
