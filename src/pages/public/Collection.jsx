@@ -434,7 +434,7 @@ export default function Collection() {
               RECHERCHE SUR-MESURE
             </button>
             <a 
-              href="tel:+2250710101052 "
+              href="tel:+2250710101052  "
               className="w-full flex items-center justify-center border border-white/30 px-6 py-3.5 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-white/10 hover:border-white rounded-md"
             >
               <Phone size={14} className="mr-2" aria-hidden="true" />

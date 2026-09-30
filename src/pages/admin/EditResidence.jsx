@@ -24,10 +24,14 @@ export default function EditResidence() {
 
   const initialFormRef = useRef(null);
 
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
+  const [deletedImageIds, setDeletedImageIds] = useState([]);
+
   const [formData, setFormData] = useState({
     name: '', category: '', description: '', location: '',
     capacity: 1, rooms: 1, amenities: [], price: 0,
-    status: 'Disponible', address: '', images: []
+    status: 'Disponible', address: ''
   });
 
   const [availableAmenities, setAvailableAmenities] = useState({});
@@ -95,22 +99,26 @@ export default function EditResidence() {
           }
         }
         
-        let formattedImages = [];
+        let existingImgs = [];
         if (Array.isArray(row.images) && row.images.length > 0) {
-          formattedImages = [...row.images]
+          existingImgs = [...row.images]
             .sort((a, b) => Number(b?.is_cover ?? 0) - Number(a?.is_cover ?? 0))
             .map((img) => {
+              if (!img) return null;
               const raw = typeof img === 'string' ? img : img?.image_url;
-              if (typeof raw !== 'string') return '';
+              if (typeof raw !== 'string') return null;
               const url = raw.trim();
-              return url.startsWith('/') ? `${BACKEND_URL}${url}` : url;
+              const finalUrl = url.startsWith('/') ? `${BACKEND_URL}${url}` : url;
+              return {
+                id: typeof img === 'object' ? img.id : null,
+                image_url: finalUrl
+              };
             })
-            .filter(Boolean);
-          formattedImages = [...new Set(formattedImages)];
+            .filter(img => img && img.image_url);
+        } else if (imgUrl) {
+          existingImgs = [{ id: null, image_url: imgUrl }];
         }
-        if (formattedImages.length === 0 && imgUrl) {
-          formattedImages = [imgUrl];
-        }
+        setExistingImages(existingImgs);
 
         const newFormData = {
           name: row.name ?? '',
@@ -122,8 +130,7 @@ export default function EditResidence() {
           amenities: parsedAmenities,
           price: Number(row.price_per_night) || 0,
           status: Number(row.is_active) === 1 ? 'Disponible' : 'En révision',
-          address: row.address ?? '',
-          images: formattedImages
+          address: row.address ?? ''
         };
         setFormData(newFormData);
         initialFormRef.current = newFormData;
@@ -145,23 +152,30 @@ export default function EditResidence() {
   const handleFileSelect = (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
-    // TODO: wire multipart file upload to backend storage like Cloudinary or S3
-    const newImageUrls = Array.from(e.target.files).map(file => URL.createObjectURL(file));
-    
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ...newImageUrls]
+    const filesArray = Array.from(e.target.files).map(file => ({
+      file,
+      preview: URL.createObjectURL(file)
     }));
+    setNewImages(prev => [...prev, ...filesArray]);
     
     // Reset the input value so the same file can be uploaded again if needed
     e.target.value = '';
   };
 
-  const handleRemoveImage = (indexToRemove) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, idx) => idx !== indexToRemove)
-    }));
+  const handleRemoveExistingImage = (idToRemove, index) => {
+    if (idToRemove) {
+      setDeletedImageIds(prev => [...prev, idToRemove]);
+    }
+    setExistingImages(prev => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleRemoveNewImage = (indexToRemove) => {
+    setNewImages(prev => {
+      const copy = [...prev];
+      const removed = copy.splice(indexToRemove, 1)[0];
+      if (removed && removed.preview) URL.revokeObjectURL(removed.preview);
+      return copy;
+    });
   };
 
   if (isLoading) {
@@ -233,8 +247,9 @@ export default function EditResidence() {
     });
 
     const amenitiesChanged = JSON.stringify([...formData.amenities].sort()) !== JSON.stringify([...(initialFormRef.current.amenities || [])].sort());
+    const imagesChanged = deletedImageIds.length > 0 || newImages.length > 0;
 
-    if (Object.keys(payload).length === 0 && !amenitiesChanged) {
+    if (Object.keys(payload).length === 0 && !amenitiesChanged && !imagesChanged) {
       toast.info("Aucune modification à enregistrer.");
       return;
     }
@@ -273,8 +288,42 @@ export default function EditResidence() {
           return;
         }
       }
+      
+      let imageUpdateFailed = false;
+      if (deletedImageIds.length > 0) {
+        await Promise.allSettled(
+          deletedImageIds.map(imageId => 
+            api.delete(`/residences/${id}/images/${imageId}`).catch(e => {
+              console.error("Error deleting image", e);
+              imageUpdateFailed = true;
+            })
+          )
+        );
+      }
 
-      toast.success("Résidence mise à jour avec succès.");
+      if (newImages.length > 0) {
+        await Promise.allSettled(
+          newImages.map(imgObj => {
+            const uploadData = new FormData();
+            uploadData.append('image', imgObj.file);
+            return api.post(`/residences/${id}/images`, uploadData, {
+              headers: { 'Content-Type': undefined } // Laisse Axios mettre le boundary
+            }).catch(e => {
+              console.error("Error uploading image", e);
+              imageUpdateFailed = true;
+            });
+          })
+        );
+      }
+
+      if (imageUpdateFailed) {
+        toast.warning("Résidence mise à jour, mais certaines images n'ont pas pu être traitées.");
+      } else {
+        toast.success("Résidence mise à jour avec succès.");
+      }
+
+      setNewImages([]);
+      setDeletedImageIds([]);
       initialFormRef.current = { ...formData };
       navigate('/admin/residences');
     } catch (error) {
@@ -350,26 +399,40 @@ export default function EditResidence() {
             <h2 className="font-mono text-[10px] uppercase tracking-widest text-gold mb-4">Galerie Média</h2>
             <div className="max-h-[380px] overflow-y-auto pr-2 custom-scrollbar">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {formData.images.map((img, idx) => (
-                  <div key={idx} className="relative h-32 rounded-sm overflow-hidden group">
-                    <img src={img} alt={`${formData.name} ${idx + 1}`} className="object-cover w-full h-full" />
+                {existingImages.map((img, idx) => (
+                  <div key={`exist-${idx}`} className="relative h-32 rounded-sm overflow-hidden group">
+                    <img src={img.image_url} alt={`${formData.name} ${idx + 1}`} className="object-cover w-full h-full" />
                     
                     <button 
                       type="button" 
-                      onClick={() => handleRemoveImage(idx)}
+                      onClick={() => handleRemoveExistingImage(img.id, idx)}
                       aria-label="Supprimer l'image" 
                       className="absolute top-2 right-2 z-10 bg-red-600 text-white p-1.5 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 shadow-sm"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
 
-                    {/* TODO: wire upload */}
-                    <button type="button" aria-label="Remplacer l'image" className="absolute inset-0 bg-night/0 hover:bg-night/50 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 text-white text-xs uppercase tracking-widest">
-                      Remplacer
+                    <button type="button" aria-label="Remplacer l'image" className="absolute inset-0 bg-night/0 hover:bg-night/50 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 text-white text-xs uppercase tracking-widest pointer-events-none">
+                      {/* Remplacer visuel */}
                     </button>
                   </div>
                 ))}
-                {/* TODO: wire real multipart file upload to backend */}
+
+                {newImages.map((imgObj, idx) => (
+                  <div key={`new-${idx}`} className="relative h-32 rounded-sm overflow-hidden group border-2 border-royal/30">
+                    <img src={imgObj.preview} alt={`Nouvelle image ${idx + 1}`} className="object-cover w-full h-full" />
+                    
+                    <button 
+                      type="button" 
+                      onClick={() => handleRemoveNewImage(idx)}
+                      aria-label="Supprimer la nouvelle image" 
+                      className="absolute top-2 right-2 z-10 bg-red-600 text-white p-1.5 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 shadow-sm"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+
                 <button type="button" onClick={() => fileInputRef.current?.click()} className="relative h-32 rounded-sm overflow-hidden border-2 border-dashed border-ink/15 hover:border-royal hover:bg-royal/5 transition-colors flex flex-col items-center justify-center gap-2 text-ink-muted hover:text-royal">
                   <ImageIcon className="h-5 w-5" />
                   <span className="text-xs uppercase tracking-widest text-center px-2">Gérer les photos<br/>/ Ajouter</span>
