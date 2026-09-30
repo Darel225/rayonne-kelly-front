@@ -8,8 +8,9 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import api from '../../services/api';
 import useAuthStore from '../../store/authStore';
+import bgImage from '../../assets/images/connexion-ins.jpeg';
 
-const BG_IMAGE_URL = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=1600';
+const BG_IMAGE_URL = bgImage;
 
 const loginSchema = z.object({
   email: z.string().email("Format d'e-mail invalide"),

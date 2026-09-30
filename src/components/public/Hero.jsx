@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import heroBack from '../../assets/images/hero-back.jpg';
 
 const premiumEase = [0.22, 1, 0.36, 1];
 
@@ -25,7 +26,7 @@ export default function Hero({ featured = FEATURED_DEFAULT }) {
   return (
     <section className="relative w-full min-h-[85vh] overflow-hidden bg-night flex flex-col">
       <motion.img
-        src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000"
+        src={heroBack}
         alt=""
         aria-hidden="true"
         fetchPriority="high"
@@ -102,12 +103,14 @@ export default function Hero({ featured = FEATURED_DEFAULT }) {
 
           <div className="w-px self-stretch bg-white/20" />
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col justify-center h-full">
+            {/* Prix masqué - Positionnement Premium
             <div>
               <span className="font-serif text-2xl text-white">{featured.price}</span>
               <span className="text-xs text-white/50 ml-1">{featured.unit}</span>
             </div>
-            <div className="text-[9px] uppercase tracking-[0.2em] text-gold">
+            */}
+            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-gold">
               {featured.perk}
             </div>
           </div>

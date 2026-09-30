@@ -37,7 +37,7 @@ function StandardCard({ r }) {
   const imageUrl = getImageUrl(r.cover_image_url);
   const premiumEase = [0.22, 1, 0.36, 1];
   return (
-    <article aria-labelledby={`c-${r.id || r.slug}-title`} className="flex flex-col">
+    <article aria-labelledby={`c-${r.id || r.slug}-title`} className="flex flex-col h-full">
       <motion.div
         className="group relative aspect-[16/10] overflow-hidden shadow-xl shadow-night/10 bg-gray-200"
         initial={{ opacity: 0, y: 30 }}
@@ -58,7 +58,7 @@ function StandardCard({ r }) {
         </div>
       </motion.div>
       <motion.div
-        className="mt-6"
+        className="mt-6 flex flex-col flex-grow"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
@@ -71,15 +71,17 @@ function StandardCard({ r }) {
               {r.district} • RÉF. {r.reference}
             </div>
           </div>
+          {/* Prix masqué - Positionnement Premium
           <div className="text-right whitespace-nowrap">
             <span className="font-serif text-lg text-ink">{new Intl.NumberFormat('fr-FR').format(r.price_per_night)}</span>
             <span className="ml-1 text-xs text-ink-muted">FCFA</span>
           </div>
+          */}
         </div>
         <p className="mt-3 text-xs leading-relaxed text-ink-muted line-clamp-3 text-safe">
           {r.description}
         </p>
-        <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-4">
+        <div className="mt-auto flex items-center justify-between border-t border-gray-200 pt-4">
           <div className="text-[11px] text-ink-muted">
             {r.rooms_count} Pièces • {r.max_guests} Voyageurs
           </div>
@@ -135,7 +137,8 @@ function DarkCard({ r }) {
           <div className="text-[10px] uppercase tracking-[0.15em] text-white/40 mb-1">CONFIGURATION</div>
           <div className="text-sm font-medium">{r.rooms_count} Pièces & {r.max_guests} Voyageurs</div>
         </div>
-        <div className="mt-2 flex items-end justify-between gap-4">
+        <div className="mt-2 flex items-end justify-end gap-4">
+          {/* Prix masqué - Positionnement Premium
           <div>
             <div className="text-[10px] uppercase tracking-[0.15em] text-white/40 mb-1">Tarif de location</div>
             <div>
@@ -143,6 +146,7 @@ function DarkCard({ r }) {
               <span className="ml-1 font-sans text-xs text-white/60">FCFA / nuit</span>
             </div>
           </div>
+          */}
           <Link to={`/collection/${r.slug || r.id}`} className="border border-white/30 px-7 py-3.5 text-[11px] uppercase tracking-[0.2em] text-white hover:bg-white hover:text-night transition-colors">
             DÉCOUVRIR
           </Link>
@@ -430,7 +434,7 @@ export default function Collection() {
               RECHERCHE SUR-MESURE
             </button>
             <a 
-              href="tel:+2250565697263"
+              href="tel:+2250710101052 "
               className="w-full flex items-center justify-center border border-white/30 px-6 py-3.5 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-white/10 hover:border-white rounded-md"
             >
               <Phone size={14} className="mr-2" aria-hidden="true" />

@@ -51,8 +51,8 @@ export default function Footer() {
           <div>
             <h3 className="text-xs uppercase tracking-[0.25em] text-gold mb-6 font-medium">CONTACT & ASSISTANCE</h3>
             <div className="space-y-3 text-xs leading-relaxed text-white/60">
-              <p>Adresse: Cocody Ambassades, Abidjan, Côte d'Ivoire</p>
-              <p>Téléphone: +225 XX XX XX XX XX</p>
+              <p>Adresse: Abidjan, Côte d'Ivoire</p>
+              <p>Téléphone: +2250710101052 </p>
               <p>Email: <a href="mailto:contact@rayonnekelly.ci" className="hover:text-white transition-colors">contact@rayonnekelly.ci</a></p>
             </div>
           </div>

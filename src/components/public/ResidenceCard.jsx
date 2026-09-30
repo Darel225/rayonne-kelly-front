@@ -77,7 +77,8 @@ export default function ResidenceCard({ residence, index, showDescription = true
               )}
             </dl>
 
-            <div className="mt-auto pt-4 flex items-end justify-between gap-4">
+            <div className="mt-auto pt-8 flex items-start justify-start gap-4">
+              {/* Prix masqué - Positionnement Premium
               {residence.pricePerNight !== null && (
                 <div>
                   <div className="text-[10px] uppercase tracking-[0.15em] text-ink-muted mb-1">TARIFICATIF</div>
@@ -87,6 +88,7 @@ export default function ResidenceCard({ residence, index, showDescription = true
                   </div>
                 </div>
               )}
+              */}
               <Link to={`/collection/${residence.slug}`} className="inline-flex items-center justify-center gap-3 bg-royal px-7 py-3.5 text-[11px] uppercase tracking-[0.2em] text-white transition-colors hover:bg-royal-dark">
                 DÉCOUVRIR
                 <ArrowRight size={14} aria-hidden="true" />
@@ -132,7 +134,8 @@ export default function ResidenceCard({ residence, index, showDescription = true
             )}
           </div>
 
-          <div className="md:border-l md:border-gray-200 md:pl-8">
+          <div className="md:border-l md:border-gray-200 md:pl-8 flex flex-col justify-end">
+            {/* Prix masqué - Positionnement Premium
             <div>
               <div className="text-[10px] uppercase tracking-[0.15em] text-ink-muted mb-1">TARIFICATIF</div>
               <div>
@@ -140,7 +143,8 @@ export default function ResidenceCard({ residence, index, showDescription = true
                 <span className="ml-1 text-[11px] text-ink-muted">/ nuit</span>
               </div>
             </div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mt-2 mb-4">
+            */}
+            <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-4 md:mb-5">
               {residence.highlight}
             </div>
             <Link to={`/collection/${residence.slug}`} className="inline-flex items-center justify-center gap-3 bg-royal px-7 py-3.5 text-[11px] uppercase tracking-[0.2em] text-white transition-colors hover:bg-royal-dark">

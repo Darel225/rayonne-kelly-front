@@ -145,16 +145,18 @@ export default function BookingWidget({ residence }) {
   return (
     <aside className="lg:sticky lg:top-32 bg-white border border-gray-200/60 rounded-[1px] p-6 md:p-8 shadow-sm">
       <div className="flex items-center justify-between mb-8">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-ink-muted">TARIF DE RÉSIDENCE</span>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-ink-muted">VOTRE SÉJOUR</span>
         <span className="inline-block border border-royal text-royal text-[10px] font-semibold uppercase px-2 py-1 tracking-wider rounded-sm">MANDAT EXCLUSIF</span>
       </div>
 
-      <div className="mb-8 border-b border-gray-100 pb-8">
+      <div className="mb-8 border-b border-gray-100 pb-6">
+        {/* Prix masqué - Positionnement Premium
         <div className="flex items-baseline gap-2">
           <span className="font-serif text-2xl text-night">{new Intl.NumberFormat('fr-FR').format(pricePerNight)}</span>
           <span className="text-xs uppercase text-ink-muted">FCFA / NUITÉE</span>
         </div>
-        <div className="text-xs text-ink-muted mt-2">
+        */}
+        <div className="text-xs text-ink-muted">
           Séjour minimum : {minStay} nuit{minStay > 1 ? 's' : ''}
         </div>
       </div>
