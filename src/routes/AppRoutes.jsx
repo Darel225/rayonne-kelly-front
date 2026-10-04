@@ -21,6 +21,8 @@ import ClientsManagement from '../pages/admin/ClientsManagement';
 import Settings from '../pages/admin/Settings';
 import RequireAdmin from './RequireAdmin';
 import BookingsManagement from '../pages/admin/BookingsManagement';
+import CustomRequestsManagement from '../pages/admin/CustomRequestsManagement';
+import CorporateRequestsManagement from '../pages/admin/CorporateRequestsManagement';
 
 export default function AppRoutes() {
   return (
@@ -50,6 +52,8 @@ export default function AppRoutes() {
 
         <Route path="bookings" element={<BookingsManagement />} />
         <Route path="bookings/:id" element={<BookingDetails />} />
+        <Route path="custom-requests" element={<CustomRequestsManagement />} />
+        <Route path="corporate-requests" element={<CorporateRequestsManagement />} />
         <Route path="clients" element={<ClientsManagement />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />

@@ -1,33 +1,26 @@
-import { MapPin, KeyRound, BedDouble, ChevronDown } from 'lucide-react';
+import { MapPin, Home, BedDouble, Wallet, ChevronDown } from 'lucide-react';
 
-export default function FilterBar({ filters, onChange, areaOptions, amenityOptions }) {
+export default function FilterBar({ filters, onChange, areaOptions }) {
   const handleSelect = (key, value) => {
     onChange({ ...filters, [key]: value });
-  };
-
-  const toggleAmenity = (id) => {
-    const next = filters.amenities.includes(id)
-      ? filters.amenities.filter(a => a !== id)
-      : [...filters.amenities, id];
-    onChange({ ...filters, amenities: next });
   };
 
   return (
     <div className="mb-14 border-y border-neutral-200/60">
       <div className="flex flex-col md:flex-row md:items-center">
 
-        {/* Destination */}
+        {/* Localisation */}
         <div className="relative flex-1 border-b md:border-b-0 md:border-r border-neutral-200/60 p-4 md:p-6 transition-colors hover:bg-neutral-50/50">
-          <label htmlFor="filter-area" className="sr-only">Destination</label>
+          <label htmlFor="filter-location" className="sr-only">Localisation</label>
           <div className="flex items-center gap-3 mb-2">
             <MapPin size={14} className="text-gold" aria-hidden="true" />
-            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-night/40">Destination</span>
+            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-night/40">Localisation</span>
           </div>
           <div className="relative">
             <select
-              id="filter-area"
-              value={filters.area}
-              onChange={(e) => handleSelect("area", e.target.value)}
+              id="filter-location"
+              value={filters.location}
+              onChange={(e) => handleSelect("location", e.target.value)}
               className="w-full appearance-none bg-transparent py-1 pr-8 text-xs uppercase tracking-[0.1em] text-night outline-none cursor-pointer"
             >
               <option value="">Toutes les zones</option>
@@ -39,47 +32,73 @@ export default function FilterBar({ filters, onChange, areaOptions, amenityOptio
           </div>
         </div>
 
-        {/* Capacity */}
+        {/* Type de bien */}
         <div className="relative flex-1 border-b md:border-b-0 md:border-r border-neutral-200/60 p-4 md:p-6 transition-colors hover:bg-neutral-50/50">
-          <label htmlFor="filter-guests" className="sr-only">Capacité</label>
+          <label htmlFor="filter-type" className="sr-only">Type de bien</label>
           <div className="flex items-center gap-3 mb-2">
-            <BedDouble size={14} className="text-gold" aria-hidden="true" />
-            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-night/40">Capacité</span>
+            <Home size={14} className="text-gold" aria-hidden="true" />
+            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-night/40">Type de bien</span>
           </div>
           <div className="relative">
             <select
-              id="filter-guests"
-              value={filters.minGuests}
-              onChange={(e) => handleSelect("minGuests", Number(e.target.value))}
+              id="filter-type"
+              value={filters.propertyType}
+              onChange={(e) => handleSelect("propertyType", e.target.value)}
               className="w-full appearance-none bg-transparent py-1 pr-8 text-xs uppercase tracking-[0.1em] text-night outline-none cursor-pointer"
             >
-              <option value={0}>Tous les voyageurs</option>
-              <option value={2}>2 voyageurs et plus</option>
-              <option value={4}>4 voyageurs et plus</option>
-              <option value={6}>6 voyageurs et plus</option>
+              <option value="">Tous les types</option>
+              <option value="appartement">Appartement</option>
+              <option value="villa">Villa</option>
+              <option value="penthouse">Penthouse</option>
             </select>
             <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-night/30" aria-hidden="true" />
           </div>
         </div>
 
-        {/* Price Slider */}
-        <div className="relative flex-1 p-4 md:p-6 transition-colors hover:bg-neutral-50/50">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-night/40">Budget Min.</span>
-            <span className="text-xs font-serif text-night">
-              {`${new Intl.NumberFormat("fr-FR").format(filters.minPrice)}+ FCFA`}
-            </span>
+        {/* Chambres */}
+        <div className="relative flex-1 border-b md:border-b-0 md:border-r border-neutral-200/60 p-4 md:p-6 transition-colors hover:bg-neutral-50/50">
+          <label htmlFor="filter-rooms" className="sr-only">Chambres</label>
+          <div className="flex items-center gap-3 mb-2">
+            <BedDouble size={14} className="text-gold" aria-hidden="true" />
+            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-night/40">Chambres</span>
           </div>
-          <input
-            type="range"
-            min={50000}
-            max={400000}
-            step={10000}
-            value={filters.minPrice}
-            onChange={(e) => handleSelect("minPrice", Number(e.target.value))}
-            className="w-full h-0.5 bg-neutral-200 appearance-none accent-gold cursor-pointer"
-            aria-label="Prix minimum par nuit"
-          />
+          <div className="relative">
+            <select
+              id="filter-rooms"
+              value={filters.rooms}
+              onChange={(e) => handleSelect("rooms", e.target.value)}
+              className="w-full appearance-none bg-transparent py-1 pr-8 text-xs uppercase tracking-[0.1em] text-night outline-none cursor-pointer"
+            >
+              <option value="">Peu importe</option>
+              <option value="1">1 chambre</option>
+              <option value="2">2 chambres</option>
+              <option value="3">3+ chambres</option>
+            </select>
+            <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-night/30" aria-hidden="true" />
+          </div>
+        </div>
+
+        {/* Budget */}
+        <div className="relative flex-1 p-4 md:p-6 transition-colors hover:bg-neutral-50/50">
+          <label htmlFor="filter-budget" className="sr-only">Budget</label>
+          <div className="flex items-center gap-3 mb-2">
+            <Wallet size={14} className="text-gold" aria-hidden="true" />
+            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-night/40">Budget</span>
+          </div>
+          <div className="relative">
+            <select
+              id="filter-budget"
+              value={filters.budget}
+              onChange={(e) => handleSelect("budget", e.target.value)}
+              className="w-full appearance-none bg-transparent py-1 pr-8 text-xs uppercase tracking-[0.1em] text-night outline-none cursor-pointer"
+            >
+              <option value="">Peu importe</option>
+              <option value="100k">- de 100k FCFA</option>
+              <option value="300k">100k - 300k FCFA</option>
+              <option value="500k">300k+ FCFA</option>
+            </select>
+            <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-night/30" aria-hidden="true" />
+          </div>
         </div>
 
       </div>

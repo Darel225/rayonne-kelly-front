@@ -111,15 +111,13 @@ export default function Auth() {
 
       toast.success("Connexion réussie.");
 
-      // 4. Redirection selon le rôle
+      // 4. Redirection dynamique (ou par rôle par défaut)
+      const redirectUrl = new URLSearchParams(location.search).get('redirect');
+
       if (user?.role === 'admin') {
         navigate('/admin');
-      } else if (user?.role === 'client') {
-        navigate('/client');
       } else {
-        console.warn("[Login] Rôle inattendu ou absent, redirection vers /client par défaut :", user?.role);
-        // Fallback vers /client au lieu de / pour ne pas perturber l'UX si le backend omet le rôle
-        navigate('/client');
+        navigate(redirectUrl || '/client');
       }
     } catch (error) {
       console.error("[Login] Échec de la requête de login :", error);

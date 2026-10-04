@@ -1,13 +1,27 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import Hero from '../../components/public/Hero';
+import SearchBar from '../../components/public/SearchBar';
 import ResidenceCard from '../../components/public/ResidenceCard';
 import ExperienceSection from '../../components/public/ExperienceSection';
 import api from '../../services/api';
 import { getImageUrl } from '../../utils/getImageUrl';
+import CorporateRequestModal from '../../components/public/CorporateRequestModal';
+
+const fadeUpVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 1, ease: [0.22, 1, 0.36, 1] }
+  }
+};
 
 export default function Home() {
   const [residences, setResidences] = useState([]);
+  const [isCorporateModalOpen, setIsCorporateModalOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -63,40 +77,93 @@ export default function Home() {
               </p>
             </div>
           </motion.div>
+
+          {/* Intégration de la SearchBar (Simple) */}
+          <div className="mx-auto max-w-7xl px-6 pb-12">
+            <SearchBar />
+          </div>
         </section>
 
-        <div className="mx-auto max-w-7xl px-6 pt-20 md:pt-28 flex flex-col gap-24 md:gap-32 pb-24">
-          {residences.map((r, index) => (
-            <div 
-              key={r.slug || r.id || index} 
-              className={index === 2 ? "max-w-5xl mx-auto w-full" : "w-full"}
+        <div className="mx-auto max-w-7xl px-6 pt-12 md:pt-20 pb-24">
+          {/* Header de la Grille */}
+          <div className="flex items-center justify-end mb-8">
+            <Link 
+              to="/collection" 
+              className="text-xs font-medium text-gray-500 hover:text-black transition-colors tracking-wider uppercase flex items-center gap-1"
             >
-              <ResidenceCard
-                residence={{
-                  id: r.id,
-                  slug: r.slug,
-                  title: r.name,
-                  type: r.property_type || "Résidence",
-                  city: "ABIDJAN",
-                  ref: r.reference || "",
-                  description: r.description,
-                  location: r.district,
-                  guests: r.max_guests,
-                  rooms: r.rooms_count,
-                  highlight: r.amenities?.[0]?.name || "Prestations haut de gamme",
-                  pricePerNight: r.price_per_night ? Number(r.price_per_night) : null,
-                  image: getImageUrl(r.cover_image_url),
-                  layout: index < 2 ? "split" : undefined
-                }}
-                index={index}
-                showDescription={index === 2}
-              />
-            </div>
+              Voir toute la collection <ArrowRight size={14} />
+            </Link>
+          </div>
+          
+          {/* Grille */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {residences.map((r, index) => (
+            <ResidenceCard
+              key={r.slug || r.id || index}
+              residence={{
+                id: r.id,
+                slug: r.slug,
+                title: r.name,
+                type: r.property_type || "Résidence",
+                city: "ABIDJAN",
+                ref: r.reference || "",
+                description: r.description,
+                location: r.district,
+                address: r.address,
+                guests: r.max_guests,
+                rooms: r.rooms_count,
+                pricePerNight: r.price_per_night ? Number(r.price_per_night) : null,
+                cover_image_url: r.cover_image_url,
+                images: r.images,
+                status: r.status
+              }}
+              index={index}
+            />
           ))}
+          </div>
         </div>
       </section>
 
       <ExperienceSection />
+
+      {/* SECTION B2B (Épurée & Aérienne) */}
+      <section className="bg-white py-16 md:py-20">
+        <motion.div 
+          className="mx-auto max-w-3xl px-6 text-center"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.2 }
+            }
+          }}
+        >
+          <motion.div variants={fadeUpVariants} className="text-[10px] uppercase tracking-[0.25em] text-gray-400 mb-6">
+            Espace Corporate
+          </motion.div>
+          <motion.h2 variants={fadeUpVariants} className="font-serif text-3xl md:text-4xl text-gray-900 mb-8">
+            Vous êtes une entreprise ?
+          </motion.h2>
+          <motion.p variants={fadeUpVariants} className="text-gray-600 max-w-2xl mx-auto leading-relaxed mb-12 font-light text-[15px] md:text-base">
+            Des solutions d’hébergement adaptées à vos collaborateurs et missions professionnelles. Séjours professionnels, missions temporaires, expatriation ou hébergement longue durée : Rayonne Kelly propose des solutions sur-mesure pour répondre aux exigences des sociétés, multinationales et institutions.
+          </motion.p>
+          <motion.button 
+            variants={fadeUpVariants}
+            onClick={() => setIsCorporateModalOpen(true)}
+            className="inline-block bg-white border border-night text-night hover:border-royal hover:bg-royal hover:text-white px-8 py-3.5 rounded-full text-[11px] font-medium tracking-[0.15em] uppercase transition-colors duration-300"
+          >
+            Demander une offre entreprise
+          </motion.button>
+        </motion.div>
+      </section>
+
+      <CorporateRequestModal 
+        isOpen={isCorporateModalOpen} 
+        onClose={() => setIsCorporateModalOpen(false)} 
+      />
     </>
   );
 }

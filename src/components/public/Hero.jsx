@@ -26,7 +26,7 @@ export default function Hero({ featured = FEATURED_DEFAULT }) {
   return (
     <section className="relative w-full min-h-[85vh] overflow-hidden bg-night flex flex-col">
       <motion.img
-        src={heroBack}
+        src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000"
         alt=""
         aria-hidden="true"
         fetchPriority="high"
@@ -69,20 +69,22 @@ export default function Hero({ featured = FEATURED_DEFAULT }) {
           </motion.div>
 
           <motion.h1 variants={fadeUpVariants} className="font-serif font-normal text-white text-5xl md:text-7xl leading-[1.1] mb-6">
-            {"L'Art de Vivre"}
-            <span className="block italic">{"d'Exception."}</span>
+            {"Découvrez nos biens"}
+            <span className="block italic">{"d'exception"}</span>
           </motion.h1>
 
           <motion.p variants={fadeUpVariants} className="max-w-md text-sm md:text-base leading-relaxed text-white/70 mb-10">
-            {"Découvrez notre sélection de résidences confidentielles, alliant pureté sculpturale, discrétion diplomatique et conciergerie d'élite pour un séjour sans égal."}
+            {"Une sélection de résidences meublées, appartements et villas soigneusement choisis à Abidjan pour vos séjours, locations et projets immobiliers."}
           </motion.p>
 
           <motion.div variants={fadeUpVariants} className="flex flex-col sm:flex-row gap-4">
             <Link to="/collection" className="inline-flex items-center justify-center gap-3 bg-royal hover:bg-royal-dark text-white text-xs uppercase tracking-[0.2em] px-7 py-4 rounded-sm transition-colors">
-              CONSULTER LA COLLECTION
+              Explorer nos biens
               <ArrowRight size={14} aria-hidden="true" />
             </Link>
-
+            <Link to="/collection?demande=sur-mesure" className="inline-flex items-center justify-center gap-3 border border-white/30 hover:bg-white/10 text-white text-xs uppercase tracking-[0.2em] px-7 py-4 rounded-sm transition-colors">
+              Nous confier votre recherche
+            </Link>
           </motion.div>
         </div>
 

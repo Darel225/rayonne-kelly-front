@@ -1,10 +1,11 @@
-import { ShieldCheck, Info, EyeOff, Quote } from 'lucide-react';
+import { ShieldCheck, Users, Briefcase, MapPin, Quote } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const pillars = [
-  { id: "01", title: "Confort Intransigeant", text: "Un portefeuille restreint aux résidences les plus remarquables d'Abidjan. Chaque appartement est audité pour garantir un standing hôtelier et des équipements premium.", badge: "STANDING CERTIFIÉ", icon: ShieldCheck },
-  { id: "02", title: "Conciergerie Dédiée 24/7", text: "Un attaché personnel orchestre votre séjour: chauffeurs privés, chefs à domicile, nettoyage quotidien et assistance sur mesure pour répondre à la moindre exigence.", badge: "ASSISTANCE IMMÉDIATE", icon: Info },
-  { id: "03", title: "Discrétion Absolue", text: "Une sécurisation rigoureuse de vos données et de votre intimité. Nos processus de réservation et d'accès aux résidences s'effectuent en toute confidentialité.", badge: "CONFIDENTIALITÉ GARANTIE", icon: EyeOff }
+  { id: "01", title: "Biens sélectionnés", text: "Des propriétés choisies selon des critères stricts de confort, de localisation et de qualité pour garantir un standing d'exception.", badge: "QUALITÉ CERTIFIÉE", icon: ShieldCheck },
+  { id: "02", title: "Accompagnement personnalisé", text: "Une équipe dédiée et disponible avant, pendant et après votre transaction, votre séjour ou vos projets immobiliers.", badge: "DISPONIBILITÉ 24/7", icon: Users },
+  { id: "03", title: "Service professionnel", text: "Un interlocuteur unique et hautement qualifié pour simplifier chaque étape de votre recherche ou de votre investissement.", badge: "EXPERTISE IMMOBILIÈRE", icon: Briefcase },
+  { id: "04", title: "Connaissance d'Abidjan", text: "Une expertise pointue du marché local, adaptée aux besoins des particuliers, professionnels, entreprises et investisseurs.", badge: "VISION LOCALE", icon: MapPin }
 ];
 
 const testimonial = {
@@ -62,7 +63,7 @@ export default function ExperienceSection() {
 
         {/* Pillars grid */}
         <motion.div
-          className="grid grid-cols-1 items-start gap-12 md:grid-cols-3 lg:gap-16 mb-20 md:mb-28"
+          className="grid grid-cols-1 items-start gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-10 mb-20 md:mb-28"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
@@ -70,7 +71,8 @@ export default function ExperienceSection() {
         >
           {pillars.map((pillar, index) => {
             const Icon = pillar.icon;
-            const mtClass = index === 0 ? "md:mt-0" : index === 1 ? "md:mt-6" : "md:mt-12";
+            // On adapte le décalage (mt) pour la grille à 4 colonnes (en escalier optionnel ou régulier)
+            const mtClass = index % 2 !== 0 ? "md:mt-12 lg:mt-0" : "mt-0";
             return (
               <motion.article key={pillar.id} className={mtClass} variants={itemVariants}>
                 <div className="flex items-center gap-4 mb-8">

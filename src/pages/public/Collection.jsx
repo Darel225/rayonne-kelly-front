@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Phone, ChevronLeft, ChevronRight, AlertCircle, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,19 +12,24 @@ import { getImageUrl, FALLBACK_IMAGE } from '../../utils/getImageUrl';
 import ResidenceCard from '../../components/public/ResidenceCard';
 
 const PAGE_SIZE = 6;
-const DEFAULT_FILTERS = { area: "", minGuests: 0, minPrice: 0, amenities: [] };
+const DEFAULT_FILTERS = { location: "", propertyType: "", rooms: "", budget: "" };
 
 function applyFilters(list, f) {
   return list.filter(r => {
-    if (f.area && r.district !== f.area) return false;
-    if (r.max_guests !== null && r.max_guests < f.minGuests) return false;
-    if (r.price_per_night !== null && r.price_per_night < f.minPrice) return false;
-    if (f.amenities && f.amenities.length > 0) {
-      const residenceAmenityNames = (r.amenities || []).map(a => typeof a === 'string' ? a : a.name);
-      const hasAllAmenities = f.amenities.every(amenity =>
-        residenceAmenityNames.includes(amenity)
-      );
-      if (!hasAllAmenities) return false;
+    if (f.location && r.district !== f.location) return false;
+    if (f.propertyType && r.property_type && r.property_type.toLowerCase() !== f.propertyType.toLowerCase()) return false;
+    
+    if (f.rooms) {
+      const minRooms = parseInt(f.rooms, 10);
+      if (f.rooms === "3" && r.rooms_count < 3) return false;
+      if (f.rooms !== "3" && r.rooms_count !== minRooms) return false;
+    }
+    
+    if (f.budget && r.price_per_night) {
+      const price = Number(r.price_per_night);
+      if (f.budget === "100k" && price > 100000) return false;
+      if (f.budget === "300k" && (price <= 100000 || price > 300000)) return false;
+      if (f.budget === "500k" && price <= 300000) return false;
     }
     return true;
   });
@@ -182,20 +187,34 @@ function SkeletonCard() {
 }
 
 export default function Collection() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const [residences, setResidences] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  // Initialiser les filtres depuis l'URL
+  const initialFilters = useMemo(() => {
+    return {
+      location: searchParams.get('location') || "",
+      propertyType: searchParams.get('type') || "",
+      rooms: searchParams.get('rooms') || "",
+      budget: searchParams.get('budget') || ""
+    };
+  }, [searchParams]);
+
+  const [filters, setFilters] = useState(initialFilters);
   const [page, setPage] = useState(1);
 
-  const [isCustomRequestModalOpen, setIsCustomRequestModalOpen] = useState(false);
+  const [isCustomRequestModalOpen, setIsCustomRequestModalOpen] = useState(() => searchParams.get('demande') === 'sur-mesure');
   const [customRequestForm, setCustomRequestForm] = useState({
     full_name: '',
     phone: '',
     email: '',
+    property_type: '',
     budget: '',
     preferred_location: '',
+    duration: '',
     criteria: ''
   });
   const [isSubmittingCustomRequest, setIsSubmittingCustomRequest] = useState(false);
@@ -203,7 +222,7 @@ export default function Collection() {
   const handleCustomRequestSubmit = async (e) => {
     e.preventDefault();
     if (!customRequestForm.full_name || !customRequestForm.phone) {
-      toast.error("Veuillez renseigner votre nom et votre numéro de téléphone.");
+      toast.error("Veuillez renseigner votre nom et votre numéro WhatsApp.");
       return;
     }
 
@@ -212,7 +231,7 @@ export default function Collection() {
       await api.post('/custom-requests', customRequestForm);
       setIsCustomRequestModalOpen(false);
       toast.success("Votre demande a été transmise à notre conciergerie, nous vous recontacterons sous 24h.");
-      setCustomRequestForm({ full_name: '', phone: '', email: '', budget: '', preferred_location: '', criteria: '' });
+      setCustomRequestForm({ full_name: '', phone: '', email: '', property_type: '', budget: '', preferred_location: '', duration: '', criteria: '' });
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.error || err.response?.data?.message || "Une erreur est survenue lors de l'envoi de votre demande.");
@@ -247,6 +266,15 @@ export default function Collection() {
   const handleFilterChange = (next) => {
     setFilters(next);
     setPage(1);
+    
+    // Mettre à jour l'URL pour refléter les filtres
+    const newParams = new URLSearchParams();
+    if (next.location) newParams.set('location', next.location);
+    if (next.propertyType) newParams.set('type', next.propertyType);
+    if (next.rooms) newParams.set('rooms', next.rooms);
+    if (next.budget) newParams.set('budget', next.budget);
+    
+    setSearchParams(newParams, { replace: true });
   };
 
   const areaOptions = useMemo(() => {
@@ -263,7 +291,7 @@ export default function Collection() {
   const PATTERN = ["hero", "standard", "standard", "dark", "standard", "standard"];
 
   return (
-    <div className="pb-24 pt-24 md:pt-28">
+    <div className="pb-8 pt-24 md:pt-28">
       {/* Header & Filter */}
       <motion.div
         className="mx-auto max-w-7xl px-6 pt-8 md:pt-12"
@@ -339,45 +367,36 @@ export default function Collection() {
 
         {/* Results Grid */}
         {!isLoading && !error && results.length > 0 && (
-          <div className="grid grid-cols-1 gap-x-8 gap-y-16 md:gap-y-20 md:grid-cols-2 pt-16 md:pt-24 pb-24">
-            {currentSlice.map((r, index) => {
-              const variant = PATTERN[index % 6];
-              const key = r.id || r.slug || index;
-              if (variant === "hero") {
-                return (
-                  <div key={key} className="md:col-span-2 w-full">
-                    <ResidenceCard
-                      residence={{
-                        id: r.id,
-                        slug: r.slug,
-                        title: r.name,
-                        type: r.property_type || "Résidence",
-                        city: "ABIDJAN",
-                        ref: r.reference || "",
-                        description: r.description,
-                        location: r.district,
-                        guests: r.max_guests,
-                        rooms: r.rooms_count,
-                        highlight: r.amenities?.[0]?.name || "Prestations haut de gamme",
-                        pricePerNight: r.price_per_night ? Number(r.price_per_night) : null,
-                        image: getImageUrl(r.cover_image_url),
-                        layout: "split"
-                      }}
-                      index={index}
-                      showDescription={false}
-                    />
-                  </div>
-                );
-              }
-              if (variant === "dark") return <DarkCard key={key} r={r} />;
-              return <StandardCard key={key} r={r} />;
-            })}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-16 md:pt-20 pb-8">
+            {currentSlice.map((r, index) => (
+              <ResidenceCard
+                key={r.id || r.slug || index}
+                residence={{
+                  id: r.id,
+                  slug: r.slug,
+                  title: r.name,
+                  type: r.property_type || "Résidence",
+                  city: "ABIDJAN",
+                  ref: r.reference || "",
+                  description: r.description,
+                  location: r.district,
+                  address: r.address,
+                  guests: r.max_guests,
+                  rooms: r.rooms_count,
+                  pricePerNight: r.price_per_night ? Number(r.price_per_night) : null,
+                  cover_image_url: r.cover_image_url,
+                  images: r.images,
+                  status: r.status
+                }}
+                index={index}
+              />
+            ))}
           </div>
         )}
 
         {/* Pagination Line */}
         {!isLoading && !error && results.length > 0 && (
-          <div className="mt-16 mb-24 flex flex-col md:flex-row justify-between items-center text-sm border-t border-gray-100 pt-8">
+          <div className="mt-8 mb-12 flex flex-col md:flex-row justify-between items-center text-sm border-t border-gray-100 pt-8">
             <div className="text-ink-muted">
               Affichage de <span className="font-semibold text-ink">{startIdx}</span> à <span className="font-semibold text-ink">{endIdx}</span> sur <span className="font-semibold text-ink">{results.length}</span> résidences d'exception
             </div>
@@ -408,7 +427,7 @@ export default function Collection() {
 
       {/* CTA banner */}
       <motion.div 
-        className="mx-auto max-w-5xl px-6 mt-20 mb-12"
+        className="mx-auto max-w-5xl px-6 mt-12 mb-4"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-50px" }}
@@ -420,10 +439,10 @@ export default function Collection() {
               • SERVICE SUR-MESURE
             </span>
             <h2 className="font-serif text-2xl md:text-4xl text-white leading-tight mb-4">
-              Vous recherchez une résidence confidentielle hors catalogue ?
+              Vous recherchez quelque chose de particulier ?
             </h2>
             <p className="text-white/70 text-xs max-w-md leading-relaxed">
-              Certaines de nos propriétés les plus exclusives à Abidjan sont réservées à notre clientèle privée. Confiez vos critères stricts à notre service de conciergerie.
+              Appartement, villa, résidence meublée ou bien destiné à l’investissement : confiez-nous vos critères. Notre équipe vous accompagne dans votre recherche à Abidjan.
             </p>
           </div>
           <div className="w-full md:w-2/5 flex flex-col gap-3">
@@ -431,7 +450,7 @@ export default function Collection() {
               onClick={() => setIsCustomRequestModalOpen(true)}
               className="w-full flex items-center justify-center bg-royal px-6 py-3.5 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-royal-dark rounded-md"
             >
-              RECHERCHE SUR-MESURE
+              CONFIER MA RECHERCHE À RAYONNE KELLY
             </button>
             <a 
               href="tel:+2250710101052  "
@@ -447,7 +466,7 @@ export default function Collection() {
       {isCustomRequestModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => !isSubmittingCustomRequest && setIsCustomRequestModalOpen(false)}></div>
-          <div className="relative bg-white p-8 max-w-md w-full shadow-2xl">
+          <div className="relative bg-white p-6 md:p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto rounded-xl">
             <button
               onClick={() => setIsCustomRequestModalOpen(false)}
               disabled={isSubmittingCustomRequest}
@@ -456,7 +475,7 @@ export default function Collection() {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="font-mono text-[10px] uppercase tracking-widest text-gold mb-2">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-gold mb-2 mt-2">
               Service Exclusif
             </div>
             <h3 className="font-serif text-2xl text-ink mb-6">Recherche sur-mesure</h3>
@@ -465,52 +484,80 @@ export default function Collection() {
               <Input
                 id="cr_fullname"
                 label="Nom complet *"
+                placeholder="Ex: Jean Dupont"
                 value={customRequestForm.full_name}
                 onChange={(e) => setCustomRequestForm({ ...customRequestForm, full_name: e.target.value })}
                 required
               />
-              <Input
-                id="cr_phone"
-                label="Téléphone *"
-                type="tel"
-                value={customRequestForm.phone}
-                onChange={(e) => setCustomRequestForm({ ...customRequestForm, phone: e.target.value })}
-                required
-              />
-              <Input
-                id="cr_email"
-                label="Email (optionnel)"
-                type="email"
-                value={customRequestForm.email}
-                onChange={(e) => setCustomRequestForm({ ...customRequestForm, email: e.target.value })}
-              />
-              <Input
-                id="cr_budget"
-                label="Budget (optionnel, ex: 500k-800k FCFA/nuit)"
-                value={customRequestForm.budget}
-                onChange={(e) => setCustomRequestForm({ ...customRequestForm, budget: e.target.value })}
-              />
-              <Input
-                id="cr_location"
-                label="Quartier souhaité (optionnel)"
-                value={customRequestForm.preferred_location}
-                onChange={(e) => setCustomRequestForm({ ...customRequestForm, preferred_location: e.target.value })}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  id="cr_phone"
+                  label="Numéro WhatsApp *"
+                  type="tel"
+                  placeholder="Ex: +225 07 00 00 00 00"
+                  value={customRequestForm.phone}
+                  onChange={(e) => setCustomRequestForm({ ...customRequestForm, phone: e.target.value })}
+                  required
+                />
+                <Input
+                  id="cr_email"
+                  label="Adresse Email"
+                  type="email"
+                  placeholder="Ex: jean@email.com"
+                  value={customRequestForm.email}
+                  onChange={(e) => setCustomRequestForm({ ...customRequestForm, email: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  id="cr_property_type"
+                  label="Type de bien"
+                  placeholder="Ex: Villa, Appartement"
+                  value={customRequestForm.property_type}
+                  onChange={(e) => setCustomRequestForm({ ...customRequestForm, property_type: e.target.value })}
+                />
+                <Input
+                  id="cr_location"
+                  label="Quartier souhaité"
+                  placeholder="Ex: Zone 4, Assinie"
+                  value={customRequestForm.preferred_location}
+                  onChange={(e) => setCustomRequestForm({ ...customRequestForm, preferred_location: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  id="cr_budget"
+                  label="Budget"
+                  placeholder="Ex: 500k-800k FCFA"
+                  value={customRequestForm.budget}
+                  onChange={(e) => setCustomRequestForm({ ...customRequestForm, budget: e.target.value })}
+                />
+                <Input
+                  id="cr_duration"
+                  label="Durée / Date"
+                  placeholder="Ex: 1 semaine, Juin..."
+                  value={customRequestForm.duration}
+                  onChange={(e) => setCustomRequestForm({ ...customRequestForm, duration: e.target.value })}
+                />
+              </div>
 
               <div>
-                <label htmlFor="cr_criteria" className="block font-mono text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-2">
-                  Critères spécifiques (optionnel)
+                <label htmlFor="cr_criteria" className="flex items-center justify-between mb-2 text-xs uppercase tracking-widest text-ink-muted">
+                  <span>Message</span>
+                  <span className="text-[9px] text-ink-muted/50 tracking-normal">Optionnel</span>
                 </label>
                 <textarea
                   id="cr_criteria"
                   rows="3"
-                  className="w-full bg-white border-0 border-b border-ink/30 px-4 py-3 text-ink focus:outline-none focus:border-royal focus-visible:ring-1 ring-royal/30 transition-colors resize-none"
+                  className="w-full bg-transparent border border-gray-200 rounded-md px-4 py-3 text-sm text-ink placeholder:text-ink-muted/60 outline-none transition-colors focus:border-gold resize-none"
                   value={customRequestForm.criteria}
                   onChange={(e) => setCustomRequestForm({ ...customRequestForm, criteria: e.target.value })}
                 ></textarea>
               </div>
 
-              <div className="pt-4">
+              <div className="pt-2">
                 <Button
                   type="submit"
                   variant="primary"
