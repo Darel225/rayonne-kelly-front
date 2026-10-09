@@ -26,7 +26,7 @@ export default function Hero({ featured = FEATURED_DEFAULT }) {
   return (
     <section className="relative w-full min-h-[85vh] overflow-hidden bg-night flex flex-col">
       <motion.img
-        src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000"
+        src={heroBack}
         alt=""
         aria-hidden="true"
         fetchPriority="high"

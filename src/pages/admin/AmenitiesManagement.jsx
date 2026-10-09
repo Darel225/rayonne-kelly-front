@@ -3,6 +3,7 @@ import { Search } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../services/api';
 import Button from '../../components/common/Button';
+import { AMENITY_ICONS, getAmenityIcon } from '../../utils/iconMap';
 
 const CATEGORIES = ['Bien-être & Loisirs', 'Sécurité & Autonomie Totale'];
 const STATUS_OPTIONS = ['Actif', 'En révision'];
@@ -13,6 +14,7 @@ const mapAmenity = (row) => ({
   category: row.category,
   status: Number(row.is_active) === 1 ? 'Actif' : 'En révision',
   assignedCount: Number(row.usage_count) || 0,
+  iconName: row.icon_name,
 });
 
 export default function AmenitiesManagement() {
@@ -32,7 +34,7 @@ export default function AmenitiesManagement() {
   const [amenityToDelete, setAmenityToDelete] = useState(null);
 
   // Modal form state
-  const [formData, setFormData] = useState({ name: '', category: CATEGORIES[0], status: 'Actif' });
+  const [formData, setFormData] = useState({ name: '', category: CATEGORIES[0], status: 'Actif', icon_name: 'Check' });
 
   const loadAmenities = useCallback(async (abortController) => {
     try {
@@ -81,10 +83,10 @@ export default function AmenitiesManagement() {
     if (id) {
       const am = amenities.find(a => a.id === id);
       if (am) {
-        setFormData({ name: am.name, category: am.category, status: am.status });
+        setFormData({ name: am.name, category: am.category, status: am.status, icon_name: am.iconName || 'Check' });
       }
     } else {
-      setFormData({ name: '', category: CATEGORIES[0], status: 'Actif' });
+      setFormData({ name: '', category: CATEGORIES[0], status: 'Actif', icon_name: 'Check' });
     }
     setIsModalOpen(true);
   };
@@ -108,13 +110,15 @@ export default function AmenitiesManagement() {
         await api.put(`/admin/amenities/${editingId}`, {
           name: formData.name,
           category: formData.category,
-          is_active: formData.status === 'Actif' ? 1 : 0
+          is_active: formData.status === 'Actif' ? 1 : 0,
+          icon_name: formData.icon_name
         });
         toast.success("Équipement modifié avec succès.");
       } else {
         await api.post('/amenities', {
           name: formData.name,
-          category: formData.category
+          category: formData.category,
+          icon_name: formData.icon_name
         });
         toast.success("Équipement ajouté avec succès.");
       }
@@ -256,7 +260,13 @@ export default function AmenitiesManagement() {
                   </div>
                 </div>
                 
-                <h2 className="font-serif text-base text-ink mt-1 line-clamp-2">{amenity.name}</h2>
+                <h2 className="font-serif text-base text-ink mt-1 line-clamp-2 flex items-center gap-2">
+                  {(() => {
+                    const IconComp = getAmenityIcon(amenity.iconName);
+                    return <IconComp size={16} className="text-royal/60 shrink-0" />;
+                  })()}
+                  <span>{amenity.name}</span>
+                </h2>
                 
                 <div className="mt-auto pt-4 border-t border-ink/10 flex items-center justify-between">
                   <div className="text-xs text-ink-muted">
@@ -318,6 +328,27 @@ export default function AmenitiesManagement() {
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className={labelClass}>ICÔNE</label>
+                <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 max-h-40 overflow-y-auto p-2 border border-ink/15 bg-gray-50/50 rounded-[1px]">
+                  {Object.entries(AMENITY_ICONS).map(([key, IconComponent]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      title={key}
+                      onClick={() => setFormData(prev => ({ ...prev, icon_name: key }))}
+                      className={`p-2 flex items-center justify-center rounded transition-all duration-200 ${
+                        formData.icon_name === key
+                          ? 'bg-royal text-white shadow-md'
+                          : 'bg-white text-ink-muted hover:bg-gray-100 hover:text-royal border border-transparent hover:border-gray-200'
+                      }`}
+                    >
+                      <IconComponent size={18} />
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>

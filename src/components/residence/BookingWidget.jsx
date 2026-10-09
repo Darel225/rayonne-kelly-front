@@ -43,7 +43,10 @@ export default function BookingWidget({ residence }) {
             <Star size={12} className="text-white fill-white/50" />
             Service Privilège
           </div>
-          <h3 className="font-serif text-2xl font-light tracking-wide text-white mb-10">Intéressé par ce bien ?</h3>
+          <h3 className="font-serif text-2xl font-light tracking-wide text-white mb-3">Intéressé par ce bien ?</h3>
+          <p className="text-xs text-white/80 font-medium tracking-wide mb-8">
+            ✓ Formule tout inclus &bull; Tarifs ajustables selon la durée du séjour
+          </p>
 
           <div className="space-y-4">
             <button 

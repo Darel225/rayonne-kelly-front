@@ -7,37 +7,26 @@ import api from '../../services/api';
 import { getImageUrl, FALLBACK_IMAGE } from '../../utils/getImageUrl';
 import BookingWidget from '../../components/residence/BookingWidget';
 
-// Mapping des icônes pour les commodités
-const iconMap = {
-  'shield': Shield,
-  'wifi': Wifi,
-  'tv': Tv,
-  'coffee': Coffee,
-  'droplets': Droplets,
-  'wind': Wind,
-  'lock': Lock,
-  'battery': Battery,
-  'thermometer': Thermometer,
-  'zap': Zap,
-  'key': Key,
-  'star': Star,
-  'shield-check': ShieldCheck,
-};
+import { getAmenityIcon } from '../../utils/iconMap';
 
 function getIconComponent(amenity) {
+  // Nouveau système : L'icône est renseignée depuis le back-office
   if (amenity?.icon_name) {
-    return iconMap[amenity.icon_name.toLowerCase()] || Check;
+    return getAmenityIcon(amenity.icon_name);
   }
+  
+  // Fallback (Ancien système) : Pour les équipements actuels où icon_name est NULL
   const name = amenity?.name?.toLowerCase() || '';
-  if (name.includes('wifi') || name.includes('internet')) return Wifi;
-  if (name.includes('tv') || name.includes('télé')) return Tv;
-  if (name.includes('piscine') || name.includes('eau') || name.includes('jacuzzi')) return Droplets;
-  if (name.includes('clim') || name.includes('air')) return Wind;
-  if (name.includes('sécurité') || name.includes('gardien') || name.includes('alarme')) return Shield;
-  if (name.includes('café') || name.includes('thé') || name.includes('nespresso')) return Coffee;
-  if (name.includes('serrure') || name.includes('coffre')) return Lock;
-  if (name.includes('énergie') || name.includes('groupe') || name.includes('générateur')) return Zap;
-  return Check;
+  if (name.includes('wifi') || name.includes('internet')) return getAmenityIcon('Wifi');
+  if (name.includes('tv') || name.includes('télé')) return getAmenityIcon('Tv');
+  if (name.includes('piscine') || name.includes('eau') || name.includes('jacuzzi')) return getAmenityIcon('Droplets');
+  if (name.includes('clim') || name.includes('air')) return getAmenityIcon('Wind');
+  if (name.includes('sécurité') || name.includes('gardien') || name.includes('alarme')) return getAmenityIcon('Shield');
+  if (name.includes('café') || name.includes('thé') || name.includes('nespresso')) return getAmenityIcon('Coffee');
+  if (name.includes('serrure') || name.includes('coffre')) return getAmenityIcon('Lock');
+  if (name.includes('énergie') || name.includes('groupe') || name.includes('générateur')) return getAmenityIcon('Zap');
+  
+  return getAmenityIcon('Check');
 }
 
 const containerVariants = {
