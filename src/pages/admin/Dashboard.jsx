@@ -392,6 +392,8 @@ export default function Dashboard() {
                   <img
                     src={residence.cover_image_url ? getImageUrl(residence.cover_image_url) : ''}
                     alt={residence.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     onError={(e) => {
                       e.target.onerror = null;

@@ -241,6 +241,8 @@ export default function ResidenceDetails() {
                   <img
                     src={getImageUrl(coverImage?.image_url)}
                     alt={`${residence.name} - Vue Principale`}
+                    fetchPriority="high"
+                    decoding="async"
                     className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${!isAvailable ? 'grayscale-[20%]' : ''}`}
                     onError={(e) => { e.target.onerror = null; e.target.src = FALLBACK_IMAGE; }}
                   />
@@ -286,6 +288,7 @@ export default function ResidenceDetails() {
                             src={getImageUrl(img.image_url)}
                             alt={`${residence.name} - Vue ${index + 2}`}
                             loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                             onError={(e) => { e.target.onerror = null; e.target.src = FALLBACK_IMAGE; }}
                           />

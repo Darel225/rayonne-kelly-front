@@ -61,6 +61,8 @@ export default function ResidenceCard({ residence, index }) {
           <img
             src={currentImage}
             alt={residence.title || residence.name}
+            loading="lazy"
+            decoding="async"
             className={`w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 ${!isAvailable ? 'grayscale-[25%]' : ''}`}
             onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80'; }}
           />
