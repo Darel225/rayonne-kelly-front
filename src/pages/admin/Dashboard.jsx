@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronRight, Pencil, Loader2, AlertCircle } from 'lucide-react';
 import Button from '../../components/common/Button';
@@ -10,6 +10,7 @@ export default function Dashboard() {
 
   const [stats, setStats] = useState(null);
   const [residences, setResidences] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);
   const [recentBookings, setRecentBookings] = useState([]);
   const [totalResidences, setTotalResidences] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,13 +25,17 @@ export default function Dashboard() {
       setError(null);
       
       try {
-        const [statsRes, residencesRes, bookingsRes] = await Promise.all([
+        const [statsResult, residencesResult, bookingsResult] = await Promise.allSettled([
           api.get('/admin/stats', { signal: controller.signal }),
           api.get('/residences', { signal: controller.signal }),
           api.get('/bookings', { signal: controller.signal })
         ]);
         
         if (!isMounted) return;
+
+        const statsRes = statsResult.status === 'fulfilled' ? statsResult.value : null;
+        const residencesRes = residencesResult.status === 'fulfilled' ? residencesResult.value : null;
+        const bookingsRes = bookingsResult.status === 'fulfilled' ? bookingsResult.value : null;
         
         const sData = statsRes?.data || statsRes;
         const rData = Array.isArray(residencesRes) ? residencesRes : (residencesRes?.data || []);
@@ -41,8 +46,12 @@ export default function Dashboard() {
         setTotalResidences(rData.length);
         
         bData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setAllBookings(bData);
         setRecentBookings(bData.slice(0, 3));
-        
+
+        if (statsResult.status === 'rejected' && residencesResult.status === 'rejected' && bookingsResult.status === 'rejected') {
+          setError("Impossible de charger les données du tableau de bord.");
+        }
       } catch (err) {
         if (!isMounted) return;
         if (err.name === 'CanceledError') return;
@@ -61,10 +70,60 @@ export default function Dashboard() {
     };
   }, []);
 
-  const pendingTotal = stats ? (stats.pending_count + stats.cancellation_requested_count + stats.modification_requested_count) : 0;
+  const safeNumber = (val) => {
+    const num = Number(val);
+    return Number.isFinite(num) ? num : 0;
+  };
+
+  const formatCount = (val) => {
+    const n = safeNumber(val);
+    return n < 10 ? `0${n}` : `${n}`;
+  };
+
+  // 1. Demandes en attente (calcul sécurisé anti-NaN avec repli sur les réservations réelles)
+  const pendingTotal = useMemo(() => {
+    if (stats && (stats.pending_count !== undefined || stats.pending !== undefined)) {
+      return (
+        safeNumber(stats.pending_count ?? stats.pending) +
+        safeNumber(stats.cancellation_requested_count) +
+        safeNumber(stats.modification_requested_count)
+      );
+    }
+    return (allBookings || []).filter(b => 
+      ['pending', 'cancellation_requested', 'modification_requested'].includes(b.status)
+    ).length;
+  }, [stats, allBookings]);
+
+  // 2. Réservations confirmées
+  const confirmedCount = useMemo(() => {
+    if (stats && (stats.confirmed_count !== undefined || stats.confirmed !== undefined || stats.validated_count !== undefined)) {
+      return safeNumber(stats.confirmed_count ?? stats.confirmed ?? stats.validated_count);
+    }
+    return (allBookings || []).filter(b => 
+      ['validated', 'completed'].includes(b.status)
+    ).length;
+  }, [stats, allBookings]);
+
+  // 3. Volume d'affaires brut
+  const totalRevenue = useMemo(() => {
+    if (stats && (stats.total_revenue !== undefined || stats.revenue !== undefined)) {
+      return safeNumber(stats.total_revenue ?? stats.revenue);
+    }
+    return (allBookings || []).filter(b => 
+      ['validated', 'completed'].includes(b.status)
+    ).reduce((sum, b) => sum + safeNumber(b.total_amount || b.amount || b.price), 0);
+  }, [stats, allBookings]);
+
+  // 4. Résidences actives
+  const activeResidencesCount = useMemo(() => {
+    if (stats && (stats.active_residences_count !== undefined || stats.active_residences !== undefined)) {
+      return safeNumber(stats.active_residences_count ?? stats.active_residences);
+    }
+    return totalResidences;
+  }, [stats, totalResidences]);
   
   const formatCurrency = (val) => {
-    return new Intl.NumberFormat('fr-FR').format(val || 0);
+    return new Intl.NumberFormat('fr-FR').format(safeNumber(val));
   };
   
   const getStatusDisplay = (status) => {
@@ -122,7 +181,13 @@ export default function Dashboard() {
               )}
             </div>
             <div className="font-serif text-4xl text-ink">
-              {isLoading ? <div className="h-10 w-20 bg-gray-200 animate-pulse rounded"></div> : error ? '—' : (pendingTotal < 10 ? `0${pendingTotal}` : pendingTotal)}
+              {isLoading ? (
+                <div className="h-10 w-20 bg-gray-200 animate-pulse rounded"></div>
+              ) : error ? (
+                '—'
+              ) : (
+                formatCount(pendingTotal)
+              )}
             </div>
             {!isLoading && !error && (
               <div className="text-xs text-ink-muted mt-2">
@@ -139,7 +204,13 @@ export default function Dashboard() {
               </span>
             </div>
             <div className="font-serif text-4xl text-ink">
-              {isLoading ? <div className="h-10 w-20 bg-gray-200 animate-pulse rounded"></div> : error ? '—' : (stats?.confirmed_count < 10 ? `0${stats?.confirmed_count}` : stats?.confirmed_count)}
+              {isLoading ? (
+                <div className="h-10 w-20 bg-gray-200 animate-pulse rounded"></div>
+              ) : error ? (
+                '—'
+              ) : (
+                formatCount(confirmedCount)
+              )}
             </div>
             {!isLoading && !error && (
               <div className="text-xs text-ink-muted mt-2">
@@ -156,7 +227,13 @@ export default function Dashboard() {
               </span>
             </div>
             <div className="font-serif text-4xl text-ink">
-              {isLoading ? <div className="h-10 w-32 bg-gray-200 animate-pulse rounded"></div> : error ? '—' : formatCurrency(stats?.total_revenue)}
+              {isLoading ? (
+                <div className="h-10 w-32 bg-gray-200 animate-pulse rounded"></div>
+              ) : error ? (
+                '—'
+              ) : (
+                formatCurrency(totalRevenue)
+              )}
               {!isLoading && !error && <span className="text-sm ml-1.5">FCFA</span>}
             </div>
           </div>
@@ -169,7 +246,13 @@ export default function Dashboard() {
               </span>
             </div>
             <div className="font-serif text-4xl text-ink">
-              {isLoading ? <div className="h-10 w-20 bg-gray-200 animate-pulse rounded"></div> : error ? '—' : (stats?.active_residences_count < 10 ? `0${stats?.active_residences_count}` : stats?.active_residences_count)}
+              {isLoading ? (
+                <div className="h-10 w-20 bg-gray-200 animate-pulse rounded"></div>
+              ) : error ? (
+                '—'
+              ) : (
+                formatCount(activeResidencesCount)
+              )}
             </div>
             {!isLoading && !error && (
               <div className="text-xs text-ink-muted mt-2">
@@ -177,6 +260,7 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+
 
         </div>
 
