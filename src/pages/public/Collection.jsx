@@ -12,10 +12,16 @@ import { getImageUrl, FALLBACK_IMAGE } from '../../utils/getImageUrl';
 import ResidenceCard from '../../components/public/ResidenceCard';
 
 const PAGE_SIZE = 6;
-const DEFAULT_FILTERS = { location: "", propertyType: "", rooms: "", budget: "" };
+const DEFAULT_FILTERS = { location: "", propertyType: "", rooms: "", budget: "", transactionType: "", status: "" };
 
 function applyFilters(list, f) {
   return list.filter(r => {
+    const tx = r.transaction_type || localStorage.getItem(`rk_tx_type_${r.id}`) || 'meuble';
+    const st = r.status || localStorage.getItem(`rk_status_${r.id}`) || (r.is_active === 0 || r.status === 'unavailable' ? 'reserve' : 'disponible');
+
+    if (f.transactionType && tx !== f.transactionType) return false;
+    if (f.status && st !== f.status) return false;
+
     if (f.location && r.district !== f.location) return false;
     if (f.propertyType && r.property_type && r.property_type.toLowerCase() !== f.propertyType.toLowerCase()) return false;
     
@@ -25,8 +31,8 @@ function applyFilters(list, f) {
       if (f.rooms !== "3" && r.rooms_count !== minRooms) return false;
     }
     
-    if (f.budget && r.price_per_night) {
-      const price = Number(r.price_per_night);
+    if (f.budget && (r.price_per_night || r.price || r.price_sale)) {
+      const price = Number(r.price_per_night || r.price || r.price_sale);
       if (f.budget === "100k" && price > 100000) return false;
       if (f.budget === "300k" && (price <= 100000 || price > 300000)) return false;
       if (f.budget === "500k" && price <= 300000) return false;
@@ -199,7 +205,9 @@ export default function Collection() {
       location: searchParams.get('location') || "",
       propertyType: searchParams.get('type') || "",
       rooms: searchParams.get('rooms') || "",
-      budget: searchParams.get('budget') || ""
+      budget: searchParams.get('budget') || "",
+      transactionType: searchParams.get('transaction') || "",
+      status: searchParams.get('status') || ""
     };
   }, [searchParams]);
 
@@ -218,6 +226,7 @@ export default function Collection() {
     criteria: ''
   });
   const [isSubmittingCustomRequest, setIsSubmittingCustomRequest] = useState(false);
+  const [customRequestRgpdConsent, setCustomRequestRgpdConsent] = useState(false);
 
   const handleCustomRequestSubmit = async (e) => {
     e.preventDefault();
@@ -225,11 +234,16 @@ export default function Collection() {
       toast.error("Veuillez renseigner votre nom et votre numéro WhatsApp.");
       return;
     }
+    if (!customRequestRgpdConsent) {
+      toast.error("Veuillez accepter le traitement de vos données pour transmettre votre demande.");
+      return;
+    }
 
     setIsSubmittingCustomRequest(true);
     try {
       await api.post('/custom-requests', customRequestForm);
       setIsCustomRequestModalOpen(false);
+      setCustomRequestRgpdConsent(false);
       toast.success("Votre demande a été transmise à notre conciergerie, nous vous recontacterons sous 24h.");
       setCustomRequestForm({ full_name: '', phone: '', email: '', property_type: '', budget: '', preferred_location: '', duration: '', criteria: '' });
     } catch (err) {
@@ -327,6 +341,31 @@ export default function Collection() {
           </div>
         </div>
 
+        {/* Onglets de Navigation Rapide par Offre */}
+        <div className="flex items-center gap-2 sm:gap-3 mb-8 overflow-x-auto pb-2 scrollbar-none">
+          {[
+            { id: '', label: 'Tout le portfolio' },
+            { id: 'meuble', label: 'Résidences Meublées' },
+            { id: 'location', label: 'Locations classique' },
+            { id: 'vente', label: 'Achat & Vente' }
+          ].map((tab) => {
+            const isActive = (filters.transactionType || '') === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleFilterChange({ ...filters, transactionType: tab.id })}
+                className={`px-5 py-2.5 text-[10px] sm:text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-300 rounded-sm whitespace-nowrap ${
+                  isActive
+                    ? 'bg-night text-white shadow-lg'
+                    : 'bg-white/80 hover:bg-white text-ink-muted hover:text-ink border border-neutral-200/80'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
         <FilterBar
           filters={filters}
           onChange={handleFilterChange}
@@ -384,6 +423,8 @@ export default function Collection() {
                   guests: r.max_guests,
                   rooms: r.rooms_count,
                   pricePerNight: r.price_per_night ? Number(r.price_per_night) : null,
+                  price_sale: r.price_sale ? Number(r.price_sale) : null,
+                  transaction_type: r.transaction_type,
                   cover_image_url: r.cover_image_url,
                   images: r.images,
                   status: r.status
@@ -557,12 +598,38 @@ export default function Collection() {
                 ></textarea>
               </div>
 
+              <div className="pt-1">
+                <label className="flex items-start gap-3 cursor-pointer group select-none">
+                  <input
+                    type="checkbox"
+                    id="cr-rgpd-consent"
+                    checked={customRequestRgpdConsent}
+                    onChange={(e) => setCustomRequestRgpdConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded-sm border border-gray-300 text-royal focus:ring-gold accent-royal cursor-pointer shrink-0"
+                    required
+                  />
+                  <span className="text-xs text-ink-muted leading-relaxed group-hover:text-ink transition-colors">
+                    J'accepte que mes coordonnées soient utilisées par Rayonne Kelly pour le traitement de ma demande sur-mesure, conformément à la{' '}
+                    <a
+                      href="/confidentialite"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gold underline hover:text-ink transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      politique de confidentialité
+                    </a>
+                    . *
+                  </span>
+                </label>
+              </div>
+
               <div className="pt-2">
                 <Button
                   type="submit"
                   variant="primary"
                   className="w-full flex justify-center items-center gap-2"
-                  disabled={isSubmittingCustomRequest}
+                  disabled={isSubmittingCustomRequest || !customRequestRgpdConsent}
                 >
                   {isSubmittingCustomRequest ? (
                     <><Loader2 className="h-4 w-4 animate-spin" /> Transmission...</>

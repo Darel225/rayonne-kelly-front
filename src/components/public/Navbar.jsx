@@ -42,6 +42,14 @@ export default function Navbar() {
     return user?.role === 'admin' ? '/admin' : '/client';
   };
 
+  const handleLogoClick = (e) => {
+    setIsMenuOpen(false);
+    if (location.pathname === '/') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const navClasses = `fixed top-0 left-0 w-full z-50 transition-all duration-500 border-b ${
     (isScrolled || !isHome) 
       ? 'bg-night/95 backdrop-blur-md border-white/10 py-3 shadow-2xl' 
@@ -52,7 +60,13 @@ export default function Navbar() {
     <header className={navClasses}>
       <div className="mx-auto max-w-7xl px-6 flex items-center justify-between">
         {/* Left */}
-        <Link aria-label="Rayonne Kelly, accueil" className="shrink-0" to="/">
+        <Link 
+          to="/" 
+          onClick={handleLogoClick}
+          aria-label="Rayonne Kelly, accueil" 
+          title="Retour à l'accueil"
+          className="shrink-0 cursor-pointer"
+        >
           <div className="bg-white rounded-full h-12 w-12 flex items-center justify-center p-1 shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-transform duration-500 hover:scale-105">
             <img src={logo} alt="Rayonne Kelly" className="w-full h-full object-contain" />
           </div>
@@ -63,6 +77,12 @@ export default function Navbar() {
           <NavLink
             to="/"
             end
+            onClick={(e) => {
+              if (location.pathname === '/') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
             className={({ isActive }) =>
               `group relative text-xs uppercase tracking-widest transition-colors py-2 ${isActive ? 'text-white' : 'text-white/80 hover:text-white'}`
             }
@@ -139,7 +159,17 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-night px-6 py-4 flex flex-col gap-4 border-b border-white/10">
-          <Link to="/" onClick={() => setIsMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-white/60 hover:text-white">
+          <Link 
+            to="/" 
+            onClick={(e) => {
+              setIsMenuOpen(false);
+              if (location.pathname === '/') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }} 
+            className="text-xs uppercase tracking-[0.2em] text-white/60 hover:text-white"
+          >
             Accueil
           </Link>
           <Link to="/collection" onClick={() => setIsMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-white/60 hover:text-white">

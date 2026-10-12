@@ -113,6 +113,8 @@ export default function Home() {
                 guests: r.max_guests,
                 rooms: r.rooms_count,
                 pricePerNight: r.price_per_night ? Number(r.price_per_night) : null,
+                price_sale: r.price_sale ? Number(r.price_sale) : null,
+                transaction_type: r.transaction_type,
                 cover_image_url: r.cover_image_url,
                 images: r.images,
                 status: r.status

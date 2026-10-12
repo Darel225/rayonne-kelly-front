@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, Building, Users, Mail, Settings, FileText, ArrowLeft, LogOut, Menu, X, Calendar, Briefcase } from 'lucide-react';
+import { LayoutDashboard, Building, Users, Mail, Settings, FileText, ArrowLeft, LogOut, Menu, X, Calendar, Briefcase, UtensilsCrossed } from 'lucide-react';
 
 export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -171,6 +171,23 @@ export default function AdminLayout() {
               <>
                 <Settings className="h-4 w-4" />
                 Équipements & Services
+                {isActive && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-gold rounded-full" aria-hidden="true"></span>
+                )}
+              </>
+            )}
+          </NavLink>
+
+          <NavLink
+            to="/admin/menus"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 text-sm transition-colors rounded-sm relative ${isActive ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white'}`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <UtensilsCrossed className="h-4 w-4" />
+                Restauration & Menus
                 {isActive && (
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-gold rounded-full" aria-hidden="true"></span>
                 )}

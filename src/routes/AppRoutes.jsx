@@ -23,6 +23,7 @@ import RequireAdmin from './RequireAdmin';
 import BookingsManagement from '../pages/admin/BookingsManagement';
 import CustomRequestsManagement from '../pages/admin/CustomRequestsManagement';
 import CorporateRequestsManagement from '../pages/admin/CorporateRequestsManagement';
+import MenusManagement from '../pages/admin/MenusManagement';
 
 export default function AppRoutes() {
   return (
@@ -48,6 +49,7 @@ export default function AppRoutes() {
         <Route path="residences/create" element={<CreateResidence />} />
         <Route path="residences/:id/edit" element={<EditResidence />} />
         <Route path="amenities" element={<AmenitiesManagement />} />
+        <Route path="menus" element={<MenusManagement />} />
         <Route path="subscribers" element={<SubscribersManagement />} />
 
         <Route path="bookings" element={<BookingsManagement />} />

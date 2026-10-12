@@ -28,9 +28,20 @@ function GlobalSessionListener() {
   return null;
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
   return (
     <>
+      <ScrollToTop />
       <GlobalSessionListener />
       <Toaster richColors position="top-right" />
       <AppRoutes />
@@ -39,3 +50,4 @@ function App() {
 }
 
 export default App;
+

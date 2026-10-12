@@ -45,3 +45,155 @@
     min-width: 0;
   }
 }
+
+/* =========================================================================
+   Rayonne Kelly — Luxury DayPicker Theme (react-day-picker v10)
+   ========================================================================= */
+.rk-day-picker {
+  --rdp-accent-color: #1A1A1A;
+  --rdp-accent-background-color: #F4EEDB;
+  font-family: var(--font-sans);
+}
+
+.rk-day-picker .rdp-root {
+  display: inline-block;
+}
+
+.rk-day-picker .rdp-month {
+  width: 100%;
+}
+
+.rk-day-picker .rdp-month_caption {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.rk-day-picker .rdp-caption_label {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--color-night);
+  text-transform: capitalize;
+}
+
+.rk-day-picker .rdp-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  position: absolute;
+  right: 0.5rem;
+}
+
+.rk-day-picker .rdp-button_next,
+.rk-day-picker .rdp-button_previous {
+  background: white;
+  border: 1px solid rgba(26, 26, 26, 0.1);
+  border-radius: 2px;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-ink);
+}
+
+.rk-day-picker .rdp-button_next:hover,
+.rk-day-picker .rdp-button_previous:hover {
+  background: var(--color-night);
+  color: white;
+  border-color: var(--color-night);
+}
+
+.rk-day-picker .rdp-weekdays {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(26, 26, 26, 0.08);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.rk-day-picker .rdp-weekday {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-ink-muted);
+  width: 2.25rem;
+  text-align: center;
+}
+
+.rk-day-picker .rdp-weeks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rk-day-picker .rdp-week {
+  display: flex;
+  justify-content: space-between;
+}
+
+.rk-day-picker .rdp-day {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rk-day-picker .rdp-day_button {
+  width: 2.1rem;
+  height: 2.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.825rem;
+  font-weight: 500;
+  border-radius: 2px;
+  border: none;
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rk-day-picker .rdp-day_button:hover:not([disabled]) {
+  background: var(--color-gold-light);
+  color: var(--color-night);
+}
+
+.rk-day-picker .rdp-selected .rdp-day_button {
+  background: #1A1A1A !important;
+  color: #FFFFFF !important;
+  font-weight: 600;
+}
+
+.rk-day-picker .rdp-range_start .rdp-day_button,
+.rk-day-picker .rdp-range_end .rdp-day_button {
+  background: var(--color-gold) !important;
+  color: var(--color-night) !important;
+  font-weight: 700;
+}
+
+.rk-day-picker .rdp-range_middle .rdp-day_button {
+  background: #F4EEDB !important;
+  color: var(--color-night) !important;
+  border-radius: 0;
+}
+
+.rk-day-picker .rdp-disabled .rdp-day_button {
+  opacity: 0.3;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  color: #9CA3AF;
+}
+
+.rk-day-picker .rdp-today .rdp-day_button {
+  border-bottom: 2px solid var(--color-gold);
+}
+

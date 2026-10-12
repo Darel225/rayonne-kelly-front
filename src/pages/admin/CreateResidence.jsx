@@ -4,7 +4,8 @@ import { ArrowLeft, Image as ImageIcon, Trash2, CheckCircle, AlertTriangle } fro
 import Button from '../../components/common/Button';
 import api from '../../services/api';
 
-const STATUS_OPTIONS = ['Disponible', 'Réservée', 'En révision', 'Maintenance'];
+import { TRANSACTION_TYPES, RESIDENCE_STATUSES, getTransactionType } from '../../constants/residenceConstants';
+
 const CATEGORY_OPTIONS = ['Prestige', 'Penthouse', 'Villa de luxe', 'Appartement'];
 const CITY_OPTIONS = ['ABIDJAN', 'ASSINIE', 'Autre'];
 
@@ -12,7 +13,7 @@ export default function CreateResidence() {
   const [formData, setFormData] = useState({
     name: '', category: CATEGORY_OPTIONS[0], city: CITY_OPTIONS[0], description: '',
     capacity: 1, rooms: 1, amenities: [], price: 0,
-    status: 'Disponible', address: '', images: [],
+    status: 'disponible', transaction_type: 'meuble', is_active: 1, address: '', images: [],
     min_stay: 1, check_in_time: '15:00', check_out_time: '11:00'
   });
 
@@ -141,6 +142,7 @@ export default function CreateResidence() {
     // 2. Appel 1 : Création de la résidence
     try {
       const slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      const isSale = formData.transaction_type === 'vente';
       const payload = {
         name: formData.name,
         slug: slug,
@@ -148,17 +150,26 @@ export default function CreateResidence() {
         district: formData.city,
         address: formData.address,
         property_type: formData.category,
-        price_per_night: Number(formData.price),
+        price_per_night: isSale ? null : Number(formData.price),
+        price_sale: isSale ? Number(formData.price) : null,
         max_guests: Number(formData.capacity),
         rooms_count: Number(formData.rooms),
         min_stay: Number(formData.min_stay),
         check_in_time: formData.check_in_time || '15:00',
-        check_out_time: formData.check_out_time || '11:00'
+        check_out_time: formData.check_out_time || '11:00',
+        transaction_type: formData.transaction_type || 'meuble',
+        status: formData.status || 'disponible',
+        is_active: formData.is_active !== undefined ? Number(formData.is_active) : 1
       };
 
       const resResponse = await api.post('/residences', payload);
       const createdRes = resResponse.data ? resResponse.data : resResponse; 
       newResidenceId = createdRes.id;
+
+      if (newResidenceId) {
+        localStorage.setItem(`rk_tx_type_${newResidenceId}`, formData.transaction_type);
+        localStorage.setItem(`rk_status_${newResidenceId}`, formData.status);
+      }
       
     } catch (err) {
       console.error(err);
@@ -421,22 +432,53 @@ export default function CreateResidence() {
             <h2 className="font-mono text-[10px] uppercase tracking-widest text-gold">Paramètres Exécutifs</h2>
             
             <div>
-              <label htmlFor="status" className={labelClass}>Statut Initial</label>
-              <select id="status" name="status" required value={formData.status} onChange={handleChange} className={inputClass}>
-                {STATUS_OPTIONS.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
+              <label htmlFor="is_active" className={labelClass}>Visibilité sur le site (Publication) *</label>
+              <select id="is_active" name="is_active" value={Number(formData.is_active)} onChange={handleChange} className={inputClass}>
+                <option value={1}>Publié en ligne (Visible par le public)</option>
+                <option value={0}>Masqué / Hors ligne (Brouillon non visible)</option>
+              </select>
+              <p className="text-[10px] text-ink-muted mt-1">
+                Laissez « Publié en ligne » même si le bien est Vendu ou Loué pour afficher le macaron et valoriser votre portfolio.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="transaction_type" className={labelClass}>Type de Transaction *</label>
+              <select id="transaction_type" name="transaction_type" required value={formData.transaction_type} onChange={handleChange} className={inputClass}>
+                {TRANSACTION_TYPES.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
+              <p className="text-[10px] text-ink-muted mt-1">Définit le modèle de commercialisation.</p>
+            </div>
+
+            <div>
+              <label htmlFor="status" className={labelClass}>Statut Initial *</label>
+              <select id="status" name="status" required value={formData.status} onChange={handleChange} className={inputClass}>
+                {RESIDENCE_STATUSES.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <p className="text-[10px] text-ink-muted mt-1">Si "Vendu" ou "Loué", la réservation sera désactivée et un macaron sera affiché.</p>
             </div>
             
             <div>
-              <label htmlFor="price" className={labelClass}>Tarif / Nuitée</label>
+              <label htmlFor="price" className={labelClass}>
+                {getTransactionType(formData.transaction_type).priceLabel} *
+              </label>
               <div className="relative">
                 <input id="price" name="price" type="number" min="0" required value={formData.price} onChange={handleChange} className={`${inputClass} pr-16`} />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-widest text-ink-muted pointer-events-none">
-                  FCFA
+                  FCFA {getTransactionType(formData.transaction_type).priceSuffix}
                 </div>
               </div>
+              <p className="text-[10px] text-ink-muted mt-1">
+                {formData.transaction_type === 'vente' 
+                  ? 'Montant total de vente en Francs CFA.' 
+                  : formData.transaction_type === 'location'
+                  ? 'Montant mensuel du loyer.'
+                  : 'Tarif par nuitée de séjour.'}
+              </p>
             </div>
 
             <div className="border-t border-ink/10 pt-8 mt-8">

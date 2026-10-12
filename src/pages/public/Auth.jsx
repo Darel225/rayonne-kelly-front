@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Box, AtSign, Eye, EyeOff, ArrowRight, ShieldCheck, Phone } from 'lucide-react';
 import Button from '../../components/common/Button';
 import { useForm } from 'react-hook-form';
@@ -24,6 +24,9 @@ const registerSchema = z.object({
   phone: z.string().regex(/^\+?[0-9\s-]{8,15}$/, "Numéro de téléphone invalide (chiffres uniquement)"),
   password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
   confirmPassword: z.string(),
+  acceptTerms: z.literal(true, {
+    errorMap: () => ({ message: "Veuillez accepter les conditions et la politique de confidentialité." }),
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les clés d'accès ne correspondent pas",
   path: ["confirmPassword"],
@@ -54,7 +57,7 @@ export default function Auth() {
   const registerForm = useForm({
     resolver: zodResolver(registerSchema),
     mode: "onChange",
-    defaultValues: { lastName: '', firstName: '', email: '', phone: '', password: '', confirmPassword: '' },
+    defaultValues: { lastName: '', firstName: '', email: '', phone: '', password: '', confirmPassword: '', acceptTerms: false },
   });
 
   const handleModeSwitch = (newMode) => {
@@ -426,6 +429,31 @@ export default function Auth() {
                     <p className="text-xs text-red-500 mt-1">{registerForm.formState.errors.confirmPassword.message}</p>
                   )}
                 </div>
+              </div>
+
+              <div className="pt-2">
+                <label className="flex items-start gap-3 cursor-pointer group select-none">
+                  <input
+                    type="checkbox"
+                    id="register-acceptTerms"
+                    {...registerForm.register("acceptTerms")}
+                    className="mt-0.5 h-4 w-4 rounded-sm border border-ink/20 text-royal focus:ring-royal accent-royal cursor-pointer shrink-0"
+                  />
+                  <span className="text-xs text-ink-muted leading-relaxed group-hover:text-ink transition-colors">
+                    J'accepte les{' '}
+                    <Link to="/conditions" target="_blank" rel="noopener noreferrer" className="text-royal underline hover:text-gold transition-colors">
+                      Conditions Générales
+                    </Link>{' '}
+                    et la{' '}
+                    <Link to="/confidentialite" target="_blank" rel="noopener noreferrer" className="text-royal underline hover:text-gold transition-colors">
+                      Politique de Confidentialité
+                    </Link>{' '}
+                    de Rayonne Kelly. *
+                  </span>
+                </label>
+                {registerForm.formState.errors.acceptTerms && (
+                  <p className="text-xs text-red-500 mt-1">{registerForm.formState.errors.acceptTerms.message}</p>
+                )}
               </div>
 
               <Button

@@ -16,11 +16,16 @@ export default function CorporateRequestModal({ isOpen, onClose }) {
     specific_needs: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rgpdConsent, setRgpdConsent] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!rgpdConsent) {
+      toast.error("Veuillez accepter la politique de confidentialité pour transmettre votre demande.");
+      return;
+    }
     setIsSubmitting(true);
 
     try {
@@ -28,6 +33,7 @@ export default function CorporateRequestModal({ isOpen, onClose }) {
       await api.post('/corporate-requests', formData);
       toast.success("Votre demande entreprise a été transmise. Un Account Manager vous contactera sous 24h.");
       onClose();
+      setRgpdConsent(false);
       setFormData({
         company_name: '',
         contact_name: '',
@@ -170,10 +176,36 @@ export default function CorporateRequestModal({ isOpen, onClose }) {
                 />
               </div>
 
+              <div>
+                <label className="flex items-start gap-3 cursor-pointer group select-none">
+                  <input
+                    type="checkbox"
+                    id="corp-rgpd-consent"
+                    checked={rgpdConsent}
+                    onChange={(e) => setRgpdConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded-sm border border-gray-300 text-royal focus:ring-gold accent-royal cursor-pointer shrink-0"
+                    required
+                  />
+                  <span className="text-xs text-ink-muted leading-relaxed group-hover:text-ink transition-colors">
+                    J'accepte que les données transmises soient utilisées par Rayonne Kelly pour traiter ma demande d'hébergement professionnel, conformément à la{' '}
+                    <a
+                      href="/confidentialite"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gold underline hover:text-ink transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      politique de confidentialité
+                    </a>
+                    . *
+                  </span>
+                </label>
+              </div>
+
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-night text-white font-medium text-xs tracking-[0.2em] uppercase py-4 rounded-md hover:bg-night-light transition-colors duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                disabled={isSubmitting || !rgpdConsent}
+                className="w-full bg-night text-white font-medium text-xs tracking-[0.2em] uppercase py-4 rounded-md hover:bg-night-light transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
               >
                 {isSubmitting ? 'Transmission en cours...' : 'Solliciter un Account Manager'}
                 {!isSubmitting && <Briefcase className="w-4 h-4" />}

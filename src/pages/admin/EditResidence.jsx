@@ -8,7 +8,8 @@ import api from '../../services/api';
 const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '');
 
 
-const STATUS_OPTIONS = ['Disponible', 'Réservée', 'En révision', 'Maintenance'];
+import { TRANSACTION_TYPES, RESIDENCE_STATUSES, getTransactionType } from '../../constants/residenceConstants';
+
 const CATEGORY_OPTIONS = ['Prestige', 'Penthouse', 'Villa de luxe', 'Appartement'];
 
 export default function EditResidence() {
@@ -31,7 +32,7 @@ export default function EditResidence() {
   const [formData, setFormData] = useState({
     name: '', category: '', description: '', location: '',
     capacity: 1, rooms: 1, amenities: [], price: 0,
-    status: 'Disponible', address: ''
+    status: 'disponible', transaction_type: 'meuble', address: ''
   });
 
   const [availableAmenities, setAvailableAmenities] = useState({});
@@ -120,6 +121,14 @@ export default function EditResidence() {
         }
         setExistingImages(existingImgs);
 
+        const savedTx = row.transaction_type || localStorage.getItem(`rk_tx_type_${row.id}`) || 'meuble';
+        const rawStatus = row.status || (Number(row.is_active) === 1 ? 'disponible' : 'reserve');
+        const savedStatus = row.status || localStorage.getItem(`rk_status_${row.id}`) || rawStatus;
+        const initialPrice = savedTx === 'vente'
+          ? (Number(row.price_sale) || Number(row.price_per_night) || 0)
+          : (Number(row.price_per_night) || Number(row.price_sale) || 0);
+
+        const isPublished = row.is_active !== undefined ? (Number(row.is_active) === 1 ? 1 : 0) : 1;
         const newFormData = {
           name: row.name ?? '',
           category: row.property_type ?? row.category ?? 'Prestige',
@@ -128,8 +137,10 @@ export default function EditResidence() {
           capacity: Number(row.max_guests ?? row.guests_capacity) || 1,
           rooms: Number(row.rooms_count) || 1,
           amenities: parsedAmenities,
-          price: Number(row.price_per_night) || 0,
-          status: Number(row.is_active) === 1 ? 'Disponible' : 'En révision',
+          price: initialPrice,
+          status: savedStatus,
+          transaction_type: savedTx,
+          is_active: isPublished,
           address: row.address ?? ''
         };
         setFormData(newFormData);
@@ -220,17 +231,23 @@ export default function EditResidence() {
     }
   };
 
-  const toApiPayload = (f) => ({
-    name: (f.name ?? '').trim(),
-    property_type: f.category,
-    description: f.description,
-    price_per_night: Number(f.price),
-    max_guests: Number(f.capacity),
-    rooms_count: Number(f.rooms),
-    district: f.location,
-    address: f.address,
-    is_active: f.status === 'Disponible' ? 1 : 0,
-  });
+  const toApiPayload = (f) => {
+    const isSale = f.transaction_type === 'vente';
+    return {
+      name: (f.name ?? '').trim(),
+      property_type: f.category,
+      description: f.description,
+      price_per_night: isSale ? null : Number(f.price),
+      price_sale: isSale ? Number(f.price) : null,
+      max_guests: Number(f.capacity),
+      rooms_count: Number(f.rooms),
+      district: f.location,
+      address: f.address,
+      is_active: Number(f.is_active !== undefined ? f.is_active : 1),
+      transaction_type: f.transaction_type || 'meuble',
+      status: f.status || 'disponible'
+    };
+  };
 
   const handleSave = async () => {
     if (isSubmitting) return;
@@ -258,9 +275,16 @@ export default function EditResidence() {
       toast.error("Le nom de la résidence ne peut pas être vide.");
       return;
     }
-    if ('price_per_night' in payload && (!Number.isFinite(payload.price_per_night) || payload.price_per_night <= 0)) {
-      toast.error("Le tarif par nuitée doit être supérieur à 0.");
-      return;
+    if (formData.transaction_type === 'vente') {
+      if ('price_sale' in payload && (!Number.isFinite(payload.price_sale) || payload.price_sale <= 0)) {
+        toast.error("Le prix de vente doit être supérieur à 0.");
+        return;
+      }
+    } else {
+      if ('price_per_night' in payload && (!Number.isFinite(payload.price_per_night) || payload.price_per_night <= 0)) {
+        toast.error("Le tarif par nuitée ou loyer doit être supérieur à 0.");
+        return;
+      }
     }
     if ('max_guests' in payload && (!Number.isInteger(payload.max_guests) || payload.max_guests < 1)) {
       toast.error("La capacité d'accueil doit être au moins de 1.");
@@ -274,6 +298,13 @@ export default function EditResidence() {
     try {
       setIsSubmitting(true);
       
+      if (formData.transaction_type) {
+        localStorage.setItem(`rk_tx_type_${id}`, formData.transaction_type);
+      }
+      if (formData.status) {
+        localStorage.setItem(`rk_status_${id}`, formData.status);
+      }
+
       if (Object.keys(payload).length > 0) {
         await api.put(`/residences/${id}`, payload);
       }
@@ -537,22 +568,53 @@ export default function EditResidence() {
             <h2 className="font-mono text-[10px] uppercase tracking-widest text-gold">Paramètres Exécutifs</h2>
             
             <div>
-              <label htmlFor="status" className={labelClass}>Statut Opérationnel</label>
-              <select id="status" name="status" value={formData.status} onChange={handleChange} className={inputClass}>
-                {STATUS_OPTIONS.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
+              <label htmlFor="is_active" className={labelClass}>Visibilité sur le site (Publication) *</label>
+              <select id="is_active" name="is_active" value={Number(formData.is_active)} onChange={handleChange} className={inputClass}>
+                <option value={1}>Publié en ligne (Visible par le public)</option>
+                <option value={0}>Masqué / Hors ligne (Brouillon non visible)</option>
+              </select>
+              <p className="text-[10px] text-ink-muted mt-1">
+                Laissez « Publié en ligne » même si le bien est Vendu ou Loué pour afficher le macaron et valoriser votre portfolio.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="transaction_type" className={labelClass}>Type de Transaction *</label>
+              <select id="transaction_type" name="transaction_type" value={formData.transaction_type} onChange={handleChange} className={inputClass}>
+                {TRANSACTION_TYPES.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
+              <p className="text-[10px] text-ink-muted mt-1">Définit le modèle de commercialisation sur le site.</p>
+            </div>
+
+            <div>
+              <label htmlFor="status" className={labelClass}>Statut Commercial *</label>
+              <select id="status" name="status" value={formData.status} onChange={handleChange} className={inputClass}>
+                {RESIDENCE_STATUSES.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <p className="text-[10px] text-ink-muted mt-1">Si "Vendu" ou "Loué", la réservation sera désactivée et un macaron sera affiché.</p>
             </div>
             
             <div>
-              <label htmlFor="price" className={labelClass}>Tarif / Nuitée</label>
+              <label htmlFor="price" className={labelClass}>
+                {getTransactionType(formData.transaction_type).priceLabel} *
+              </label>
               <div className="relative">
                 <input id="price" name="price" type="number" min="0" value={formData.price} onChange={handleChange} className={`${inputClass} pr-16`} />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-widest text-ink-muted pointer-events-none">
-                  FCFA
+                  FCFA {getTransactionType(formData.transaction_type).priceSuffix}
                 </div>
               </div>
+              <p className="text-[10px] text-ink-muted mt-1">
+                {formData.transaction_type === 'vente' 
+                  ? 'Montant total de vente en Francs CFA.' 
+                  : formData.transaction_type === 'location'
+                  ? 'Montant mensuel du loyer.'
+                  : 'Tarif par nuitée de séjour.'}
+              </p>
             </div>
             
 

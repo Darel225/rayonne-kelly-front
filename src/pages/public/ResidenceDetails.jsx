@@ -6,6 +6,7 @@ import Button from '../../components/common/Button';
 import api from '../../services/api';
 import { getImageUrl, FALLBACK_IMAGE } from '../../utils/getImageUrl';
 import BookingWidget from '../../components/residence/BookingWidget';
+import RestaurantMenu from '../../components/residence/RestaurantMenu';
 
 import { getAmenityIcon } from '../../utils/iconMap';
 
@@ -215,6 +216,10 @@ export default function ResidenceDetails() {
     return acc;
   }, {});
 
+  const txType = residence?.transaction_type || localStorage.getItem(`rk_tx_type_${residence?.id}`) || 'meuble';
+  const status = residence?.status || localStorage.getItem(`rk_status_${residence?.id}`) || (residence?.is_active === 0 ? 'reserve' : 'disponible');
+  const isAvailable = status === 'disponible';
+
   return (
     <main className="pt-32 pb-24 min-h-screen bg-mist">
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto px-6">
@@ -236,10 +241,34 @@ export default function ResidenceDetails() {
                   <img
                     src={getImageUrl(coverImage?.image_url)}
                     alt={`${residence.name} - Vue Principale`}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${!isAvailable ? 'grayscale-[20%]' : ''}`}
                     onError={(e) => { e.target.onerror = null; e.target.src = FALLBACK_IMAGE; }}
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+
+                  {/* Macaron de Statut Commercial & Type de Transaction */}
+                  {status === 'vendu' ? (
+                    <div className="absolute top-6 left-6 z-10 bg-night/95 backdrop-blur-md border border-gold/70 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-gold rounded-sm shadow-xl flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
+                      DÉJÀ VENDU
+                    </div>
+                  ) : status === 'loue' ? (
+                    <div className="absolute top-6 left-6 z-10 bg-night/90 backdrop-blur-md border border-white/20 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/90 rounded-sm shadow-md">
+                      DÉJÀ LOUÉ
+                    </div>
+                  ) : status === 'reserve' ? (
+                    <div className="absolute top-6 left-6 z-10 bg-amber-950/90 backdrop-blur-md border border-amber-400/50 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-200 rounded-sm shadow-md">
+                      RÉSERVÉ
+                    </div>
+                  ) : txType === 'vente' ? (
+                    <div className="absolute top-6 left-6 z-10 bg-gold text-night px-3.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] rounded-sm shadow-md font-mono">
+                      Acquisition &bull; Vente
+                    </div>
+                  ) : txType === 'location' ? (
+                    <div className="absolute top-6 left-6 z-10 bg-white/95 text-night px-3.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] rounded-sm shadow-md font-mono">
+                      Location Longue Durée
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Small images wrapper */}
@@ -306,10 +335,12 @@ export default function ResidenceDetails() {
               <MapPin size={18} className="text-gold" />
               {residence.address ? `${residence.address}, ` : ''}{residence.district}
             </motion.p>
-            {residence.price_per_night && (
+            {(residence.price_per_night || residence.price || residence.price_sale) && (
               <motion.div variants={itemVariants} className="font-serif text-xl md:text-2xl font-light tracking-wider text-night mt-4 flex items-baseline gap-2">
-                {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(residence.price_per_night)}
-                <span className="text-[10px] font-sans font-medium text-ink-muted uppercase tracking-[0.2em]">FCFA / nuit</span>
+                {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(residence.price_sale || residence.price_per_night || residence.price)}
+                <span className="text-[10px] font-sans font-medium text-ink-muted uppercase tracking-[0.2em]">
+                  FCFA {txType === 'vente' ? '(Prix de vente)' : txType === 'location' ? '/ mois' : '/ nuit'}
+                </span>
               </motion.div>
             )}
           </motion.div>
@@ -369,9 +400,12 @@ export default function ResidenceDetails() {
               )}
             </section>
 
-            {/* Section 03 */}
+            {/* Section Gastronomie & Restauration (Affichée intelligemment si la résidence propose ce service) */}
+            <RestaurantMenu residence={residence} itemVariants={itemVariants} />
+
+            {/* Section Emplacement */}
             <section className="border-t border-black/5 pt-10">
-              <motion.div variants={itemVariants} className="font-mono text-[9px] uppercase tracking-[0.3em] text-gold mb-3">03 / EMPLACEMENT</motion.div>
+              <motion.div variants={itemVariants} className="font-mono text-[9px] uppercase tracking-[0.3em] text-gold mb-3">04 / EMPLACEMENT</motion.div>
               <motion.h2 variants={itemVariants} className="font-serif text-xl font-light tracking-wide text-night mb-5">{residence.district}</motion.h2>
               <motion.p variants={itemVariants} className="font-serif text-[15px] font-light leading-relaxed tracking-wide text-ink/80 mb-8">
                 L'adresse cadastrale exacte est exclusivement communiquée à l'hôte lors de la validation diplomatique de la réservation, afin de garantir l'anonymat et l'intimité inviolable du séjour.
@@ -469,15 +503,37 @@ export default function ResidenceDetails() {
 
       {/* Barre Fixe de Conversion (Mobile) */}
       <div className="block lg:hidden fixed bottom-0 left-0 w-full z-50 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-        <a
-          href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=Bonjour, je souhaite me renseigner sur la résidence ${residence.name} (Réf: ${residence.reference})`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full flex items-center justify-center bg-[#25D366] px-6 py-4 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-[#128C7E] rounded-sm gap-2"
-        >
-          <MessageCircle size={16} />
-          Réserver sur WhatsApp
-        </a>
+        {status === 'vendu' ? (
+          <a
+            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=Bonjour, j'ai vu la résidence ${residence.name} (Réf: ${residence.reference}) marquée comme vendue. Avez-vous un bien similaire disponible ?`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center bg-night border border-gold/70 text-gold px-6 py-4 text-xs font-semibold uppercase tracking-widest rounded-sm gap-2"
+          >
+            <MessageCircle size={16} />
+            Demander un bien similaire
+          </a>
+        ) : status === 'loue' ? (
+          <a
+            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=Bonjour, j'ai vu que la résidence ${residence.name} (Réf: ${residence.reference}) est actuellement louée. Quand sera-t-elle disponible ou avez-vous un bien similaire ?`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center bg-night border border-white/30 text-white px-6 py-4 text-xs font-semibold uppercase tracking-widest rounded-sm gap-2"
+          >
+            <MessageCircle size={16} />
+            Se renseigner sur la disponibilité
+          </a>
+        ) : (
+          <a
+            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=Bonjour, je souhaite me renseigner sur la résidence ${residence.name} (Réf: ${residence.reference})`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center bg-[#25D366] px-6 py-4 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-[#128C7E] rounded-sm gap-2"
+          >
+            <MessageCircle size={16} />
+            {txType === 'vente' ? 'Échanger sur WhatsApp' : 'Réserver sur WhatsApp'}
+          </a>
+        )}
       </div>
 
     </main>
