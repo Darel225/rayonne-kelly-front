@@ -12,7 +12,7 @@ const CITY_OPTIONS = ['ABIDJAN', 'ASSINIE', 'Autre'];
 export default function CreateResidence() {
   const [formData, setFormData] = useState({
     name: '', category: CATEGORY_OPTIONS[0], city: CITY_OPTIONS[0], description: '',
-    capacity: 1, rooms: 1, amenities: [], price: 0,
+    capacity: 1, rooms: 1, amenities: [], price: 0, price_display: 'public',
     status: 'disponible', transaction_type: 'meuble', is_active: 1, address: '', images: [],
     min_stay: 1, check_in_time: '15:00', check_out_time: '11:00'
   });
@@ -158,17 +158,32 @@ export default function CreateResidence() {
         check_in_time: formData.check_in_time || '15:00',
         check_out_time: formData.check_out_time || '11:00',
         transaction_type: formData.transaction_type || 'meuble',
+        price_display: formData.price_display || 'public',
+        is_price_displayed: formData.price_display === 'public',
         status: formData.status || 'disponible',
         is_active: formData.is_active !== undefined ? Number(formData.is_active) : 1
       };
 
-      const resResponse = await api.post('/residences', payload);
+      let resResponse;
+      try {
+        resResponse = await api.post('/residences', payload);
+      } catch (postErr) {
+        if (postErr.response?.status === 422 && ('price_display' in payload || 'is_price_displayed' in payload)) {
+          const strippedPayload = { ...payload };
+          delete strippedPayload.price_display;
+          delete strippedPayload.is_price_displayed;
+          resResponse = await api.post('/residences', strippedPayload);
+        } else {
+          throw postErr;
+        }
+      }
       const createdRes = resResponse.data ? resResponse.data : resResponse; 
       newResidenceId = createdRes.id;
 
       if (newResidenceId) {
         localStorage.setItem(`rk_tx_type_${newResidenceId}`, formData.transaction_type);
         localStorage.setItem(`rk_status_${newResidenceId}`, formData.status);
+        localStorage.setItem(`rk_price_display_${newResidenceId}`, formData.price_display);
       }
       
     } catch (err) {
@@ -477,7 +492,28 @@ export default function CreateResidence() {
                   ? 'Montant total de vente en Francs CFA.' 
                   : formData.transaction_type === 'location'
                   ? 'Montant mensuel du loyer.'
-                  : 'Tarif par nuitée de séjour.'}
+                  : 'Tarif indicatif par nuitée de séjour.'}
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="price_display" className={labelClass}>
+                Politique d'Affichage du Tarif *
+              </label>
+              <select
+                id="price_display"
+                name="price_display"
+                value={formData.price_display || 'public'}
+                onChange={handleChange}
+                className={inputClass}
+              >
+                <option value="public">🟢 Afficher le prix public (« À partir de ... »)</option>
+                <option value="on_demand">🔒 Masquer le prix (« Tarif sur demande » & Devis)</option>
+              </select>
+              <p className="text-[10px] text-ink-muted mt-1">
+                {formData.price_display === 'on_demand'
+                  ? 'Le montant sera masqué sur le site, remplacé par « Tarif sur demande » et le bouton deviendra « Demander un devis ».'
+                  : 'Le montant sera affiché publiquement avec la formule obligatoire « À partir de ... FCFA ».'}
               </p>
             </div>
 

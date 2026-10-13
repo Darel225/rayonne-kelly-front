@@ -117,7 +117,9 @@ export default function Home() {
                 transaction_type: r.transaction_type,
                 cover_image_url: r.cover_image_url,
                 images: r.images,
-                status: r.status
+                status: r.status,
+                price_display: r.price_display,
+                is_price_displayed: r.is_price_displayed
               }}
               index={index}
             />

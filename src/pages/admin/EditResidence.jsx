@@ -124,6 +124,7 @@ export default function EditResidence() {
         const savedTx = row.transaction_type || localStorage.getItem(`rk_tx_type_${row.id}`) || 'meuble';
         const rawStatus = row.status || (Number(row.is_active) === 1 ? 'disponible' : 'reserve');
         const savedStatus = row.status || localStorage.getItem(`rk_status_${row.id}`) || rawStatus;
+        const savedPriceDisplay = row.price_display || localStorage.getItem(`rk_price_display_${row.id}`) || (row.is_price_displayed !== undefined ? (row.is_price_displayed ? 'public' : 'on_demand') : 'public');
         const initialPrice = savedTx === 'vente'
           ? (Number(row.price_sale) || Number(row.price_per_night) || 0)
           : (Number(row.price_per_night) || Number(row.price_sale) || 0);
@@ -138,6 +139,7 @@ export default function EditResidence() {
           rooms: Number(row.rooms_count) || 1,
           amenities: parsedAmenities,
           price: initialPrice,
+          price_display: savedPriceDisplay,
           status: savedStatus,
           transaction_type: savedTx,
           is_active: isPublished,
@@ -245,7 +247,9 @@ export default function EditResidence() {
       address: f.address,
       is_active: Number(f.is_active !== undefined ? f.is_active : 1),
       transaction_type: f.transaction_type || 'meuble',
-      status: f.status || 'disponible'
+      status: f.status || 'disponible',
+      price_display: f.price_display || 'public',
+      is_price_displayed: (f.price_display || 'public') === 'public'
     };
   };
 
@@ -263,10 +267,11 @@ export default function EditResidence() {
       }
     });
 
+    const priceDisplayChanged = formData.price_display !== initialFormRef.current.price_display;
     const amenitiesChanged = JSON.stringify([...formData.amenities].sort()) !== JSON.stringify([...(initialFormRef.current.amenities || [])].sort());
     const imagesChanged = deletedImageIds.length > 0 || newImages.length > 0;
 
-    if (Object.keys(payload).length === 0 && !amenitiesChanged && !imagesChanged) {
+    if (Object.keys(payload).length === 0 && !amenitiesChanged && !imagesChanged && !priceDisplayChanged) {
       toast.info("Aucune modification à enregistrer.");
       return;
     }
@@ -275,15 +280,17 @@ export default function EditResidence() {
       toast.error("Le nom de la résidence ne peut pas être vide.");
       return;
     }
-    if (formData.transaction_type === 'vente') {
-      if ('price_sale' in payload && (!Number.isFinite(payload.price_sale) || payload.price_sale <= 0)) {
-        toast.error("Le prix de vente doit être supérieur à 0.");
-        return;
-      }
-    } else {
-      if ('price_per_night' in payload && (!Number.isFinite(payload.price_per_night) || payload.price_per_night <= 0)) {
-        toast.error("Le tarif par nuitée ou loyer doit être supérieur à 0.");
-        return;
+    if (formData.price_display !== 'on_demand') {
+      if (formData.transaction_type === 'vente') {
+        if ('price_sale' in payload && (!Number.isFinite(payload.price_sale) || payload.price_sale <= 0)) {
+          toast.error("Le prix de vente doit être supérieur à 0.");
+          return;
+        }
+      } else {
+        if ('price_per_night' in payload && (!Number.isFinite(payload.price_per_night) || payload.price_per_night <= 0)) {
+          toast.error("Le tarif par nuitée ou loyer doit être supérieur à 0.");
+          return;
+        }
       }
     }
     if ('max_guests' in payload && (!Number.isInteger(payload.max_guests) || payload.max_guests < 1)) {
@@ -304,9 +311,26 @@ export default function EditResidence() {
       if (formData.status) {
         localStorage.setItem(`rk_status_${id}`, formData.status);
       }
+      if (formData.price_display) {
+        localStorage.setItem(`rk_price_display_${id}`, formData.price_display);
+      }
 
       if (Object.keys(payload).length > 0) {
-        await api.put(`/residences/${id}`, payload);
+        try {
+          await api.put(`/residences/${id}`, payload);
+        } catch (apiErr) {
+          // Si le backend renvoie 422 car il n'a pas encore migré la colonne price_display
+          if (apiErr.response?.status === 422 && ('price_display' in payload || 'is_price_displayed' in payload)) {
+            const strippedPayload = { ...payload };
+            delete strippedPayload.price_display;
+            delete strippedPayload.is_price_displayed;
+            if (Object.keys(strippedPayload).length > 0) {
+              await api.put(`/residences/${id}`, strippedPayload);
+            }
+          } else {
+            throw apiErr;
+          }
+        }
       }
       
       if (amenitiesChanged) {
@@ -613,7 +637,28 @@ export default function EditResidence() {
                   ? 'Montant total de vente en Francs CFA.' 
                   : formData.transaction_type === 'location'
                   ? 'Montant mensuel du loyer.'
-                  : 'Tarif par nuitée de séjour.'}
+                  : 'Tarif indicatif par nuitée de séjour.'}
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="price_display" className={labelClass}>
+                Politique d'Affichage du Tarif *
+              </label>
+              <select
+                id="price_display"
+                name="price_display"
+                value={formData.price_display || 'public'}
+                onChange={handleChange}
+                className={inputClass}
+              >
+                <option value="public">🟢 Afficher le prix public (« À partir de ... »)</option>
+                <option value="on_demand">🔒 Masquer le prix (« Tarif sur demande » & Devis)</option>
+              </select>
+              <p className="text-[10px] text-ink-muted mt-1">
+                {formData.price_display === 'on_demand'
+                  ? 'Le montant sera masqué sur le site, remplacé par « Tarif sur demande » et le bouton deviendra « Demander un devis ».'
+                  : 'Le montant sera affiché publiquement avec la formule obligatoire « À partir de ... FCFA ».'}
               </p>
             </div>
             

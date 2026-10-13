@@ -56,6 +56,15 @@ const mapResidence = (row) => {
   const isActive = Number(row.is_active) === 1;
   const statusBadge = getStatusBadge(statusObj, isActive);
 
+  const rawPrice = txTypeObj.value === 'vente' 
+    ? (Number(row.price_sale) || Number(row.price_per_night) || 0)
+    : (Number(row.price_per_night) || Number(row.price_sale) || 0);
+
+  const rawPriceDisplay = row.price_display 
+    || (typeof window !== 'undefined' ? localStorage.getItem(`rk_price_display_${row.id}`) : null) 
+    || (row.is_price_displayed !== undefined ? (row.is_price_displayed ? 'public' : 'on_demand') : (rawPrice ? 'public' : 'on_demand'));
+  const isPriceMasked = rawPriceDisplay === 'on_demand' || !rawPrice;
+
   return {
     id: row.id,
     city: row.district || row.city || row.address || '',
@@ -65,10 +74,10 @@ const mapResidence = (row) => {
       { label: 'LOCALISATION', value: row.district || row.city || '—' },
       { label: 'PIÈCES', value: row.rooms_count ? `${row.rooms_count} Pièces` : '—' }
     ],
-    price: txTypeObj.value === 'vente' 
-      ? (Number(row.price_sale) || Number(row.price_per_night) || 0)
-      : (Number(row.price_per_night) || Number(row.price_sale) || 0),
+    price: rawPrice,
     priceSuffix: txTypeObj.priceSuffix,
+    priceDisplay: rawPriceDisplay,
+    isPriceMasked,
     img: imgUrl || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80',
     isActive,
     transactionType: txTypeObj,
@@ -88,6 +97,7 @@ export default function ResidencesManagement() {
   const [selectedCity, setSelectedCity] = useState('Toutes les villes');
   const [selectedTxType, setSelectedTxType] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedPricePolicy, setSelectedPricePolicy] = useState('all');
   const navigate = useNavigate();
 
   // Pagination
@@ -151,6 +161,10 @@ export default function ResidencesManagement() {
       // Filtre ville
       if (selectedCity !== 'Toutes les villes' && prop.city.toLowerCase() !== selectedCity.toLowerCase()) return false;
 
+      // Filtre politique tarifaire
+      if (selectedPricePolicy === 'public' && prop.isPriceMasked) return false;
+      if (selectedPricePolicy === 'on_demand' && !prop.isPriceMasked) return false;
+
       // Recherche
       if (searchTerm.trim()) {
         const s = searchTerm.toLowerCase().trim();
@@ -161,11 +175,11 @@ export default function ResidencesManagement() {
 
       return true;
     });
-  }, [properties, searchTerm, selectedCity, selectedTxType, selectedStatus]);
+  }, [properties, searchTerm, selectedCity, selectedTxType, selectedStatus, selectedPricePolicy]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedCity, selectedTxType, selectedStatus, itemsPerPage]);
+  }, [searchTerm, selectedCity, selectedTxType, selectedStatus, selectedPricePolicy, itemsPerPage]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredProperties.length / itemsPerPage));
@@ -191,6 +205,7 @@ export default function ResidencesManagement() {
     setSelectedCity('Toutes les villes');
     setSelectedTxType('all');
     setSelectedStatus('all');
+    setSelectedPricePolicy('all');
     setCurrentPage(1);
   };
 
@@ -341,6 +356,17 @@ export default function ResidencesManagement() {
             ))}
           </select>
 
+          {/* Politique Tarifaire */}
+          <select
+            value={selectedPricePolicy}
+            onChange={(e) => setSelectedPricePolicy(e.target.value)}
+            className="bg-gray-50/70 border border-ink/10 rounded-sm px-3 py-2 text-xs text-ink focus:bg-white focus:outline-none focus:border-royal cursor-pointer"
+          >
+            <option value="all">Tous les tarifs (Publics & Masqués)</option>
+            <option value="public">🟢 Prix public (« À partir de »)</option>
+            <option value="on_demand">🔒 Tarif masqué (« Sur demande »)</option>
+          </select>
+
           {/* Afficher par page */}
           <div className="flex items-center gap-1.5 border-l border-ink/10 pl-3">
             <span className="text-[11px] text-ink-muted font-mono uppercase">Afficher</span>
@@ -356,7 +382,7 @@ export default function ResidencesManagement() {
             </select>
           </div>
 
-          {(searchTerm || selectedCity !== 'Toutes les villes' || selectedStatus !== 'all' || selectedTxType !== 'all') && (
+          {(searchTerm || selectedCity !== 'Toutes les villes' || selectedStatus !== 'all' || selectedTxType !== 'all' || selectedPricePolicy !== 'all') && (
             <button
               type="button"
               onClick={resetAllFilters}
@@ -435,11 +461,20 @@ export default function ResidencesManagement() {
                   </span>
                 </div>
 
-                {/* Badge Type d'offre */}
-                <div className="absolute top-3 right-3 z-10">
+                {/* Badge Type d'offre & Politique tarifaire */}
+                <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5">
                   <span className="text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-xs bg-night/80 text-gold backdrop-blur-md border border-gold/30">
                     {prop.transactionType.label}
                   </span>
+                  {prop.isPriceMasked ? (
+                    <span className="text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-xs bg-amber-950/90 text-amber-200 backdrop-blur-md border border-amber-400/40 font-semibold shadow-xs">
+                      🔒 Tarif Masqué
+                    </span>
+                  ) : (
+                    <span className="text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-xs bg-emerald-950/80 text-emerald-300 backdrop-blur-md border border-emerald-500/40 font-semibold shadow-xs">
+                      🟢 Prix Public
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -467,12 +502,28 @@ export default function ResidencesManagement() {
                 
                 <div className="mt-auto pt-4 flex items-center justify-between border-t border-ink/10">
                   <div>
-                    <div className="font-serif text-lg text-ink font-medium">
-                      {prop.price.toLocaleString('fr-FR')} FCFA
-                      {prop.priceSuffix && (
-                        <span className="text-[9px] font-mono uppercase tracking-widest text-ink-muted ml-1">{prop.priceSuffix}</span>
-                      )}
-                    </div>
+                    {prop.isPriceMasked ? (
+                      <div>
+                        <div className="font-serif text-base text-gold font-medium">
+                          Tarif sur demande
+                        </div>
+                        <div className="text-[9px] font-mono uppercase tracking-wider text-ink-muted">
+                          Cotation & Devis
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="text-[9px] font-mono uppercase tracking-widest text-ink-muted">
+                          À partir de
+                        </div>
+                        <div className="font-serif text-lg text-ink font-medium">
+                          {prop.price.toLocaleString('fr-FR')} FCFA
+                          {prop.priceSuffix && (
+                            <span className="text-[9px] font-mono uppercase tracking-widest text-ink-muted ml-1">{prop.priceSuffix}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <Button 
                     variant="royal" 

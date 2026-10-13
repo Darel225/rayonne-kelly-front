@@ -553,9 +553,15 @@ export default function BookingsManagement() {
                           <div className="text-xs font-mono text-ink-muted uppercase">
                             — Interne
                           </div>
-                        ) : (
+                        ) : parseFloat(booking.total_price) > 0 ? (
                           <div className="font-serif font-medium text-ink whitespace-nowrap text-xs">
                             {parseFloat(booking.total_price).toLocaleString('fr-FR')} FCFA
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-xs bg-gold/15 text-gold border border-gold/40 text-[9px] font-mono uppercase tracking-wider font-semibold">
+                              Tarif sur devis
+                            </span>
                           </div>
                         )}
                       </td>

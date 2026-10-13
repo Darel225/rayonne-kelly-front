@@ -401,11 +401,13 @@ export default function Dashboard() {
                     }}
                   />
                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 text-[10px] uppercase font-mono tracking-widest text-ink rounded-sm">
-                    {residence.transaction_type === 'vente'
-                      ? formatCurrency(residence.price_sale || residence.price_per_night)
+                    {residence.price_display === 'on_demand' || localStorage.getItem(`rk_price_display_${residence.id}`) === 'on_demand'
+                      ? 'Tarif sur demande'
+                      : residence.transaction_type === 'vente'
+                      ? `À partir de ${formatCurrency(residence.price_sale || residence.price_per_night)}`
                       : residence.transaction_type === 'location'
-                      ? `${formatCurrency(residence.price_per_night)} / mois`
-                      : `${formatCurrency(residence.price_per_night)} / nuit`}
+                      ? `À partir de ${formatCurrency(residence.price_per_night)} / mois`
+                      : `À partir de ${formatCurrency(residence.price_per_night)} / nuit`}
                   </div>
                   {residence.status && residence.status !== 'disponible' && (
                     <div className="absolute top-4 left-4 bg-night/90 text-gold px-2.5 py-1 text-[9px] uppercase font-mono tracking-wider rounded-sm">

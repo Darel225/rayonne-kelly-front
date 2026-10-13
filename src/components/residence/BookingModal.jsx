@@ -11,6 +11,10 @@ export default function BookingModal({ isOpen, onClose, residence }) {
   const minStay = Math.max(Number(residence?.min_stay) || 1, 1);
   const maxGuests = Math.max(Number(residence?.max_guests) || 1, 1);
 
+  const rawPrice = residence?.price_sale || residence?.price_per_night || residence?.price;
+  const priceDisplay = residence?.price_display || localStorage.getItem(`rk_price_display_${residence?.id}`) || (residence?.is_price_displayed !== undefined ? (residence?.is_price_displayed ? 'public' : 'on_demand') : (rawPrice ? 'public' : 'on_demand'));
+  const isPriceMasked = priceDisplay === 'on_demand' || !rawPrice;
+
   const [bookingData, setBookingData] = useState({
     check_in_date: '',
     check_out_date: '',
@@ -126,6 +130,8 @@ export default function BookingModal({ isOpen, onClose, residence }) {
         finalRequests = `[DEMANDE DE VISITE PRIVÉE / ACQUISITION - Date: ${finalCheckIn} - Créneau: ${bookingData.time_slot}] ${finalRequests}`.trim();
       } else if (txType === 'location') {
         finalRequests = `[DEMANDE DE LOCATION RÉSIDENTIELLE] ${finalRequests}`.trim();
+      } else if (isPriceMasked) {
+        finalRequests = `[DEMANDE DE DEVIS PERSONNALISÉ / TARIF SUR DEMANDE] ${finalRequests}`.trim();
       }
 
       await api.post('/bookings', {
@@ -191,6 +197,8 @@ export default function BookingModal({ isOpen, onClose, residence }) {
                 ? 'Demande de visite enregistrée.' 
                 : txType === 'location' 
                 ? 'Dossier de location transmis.' 
+                : isPriceMasked
+                ? 'Demande de devis enregistrée.'
                 : 'Demande bien reçue.'}
             </h3>
             
@@ -201,6 +209,8 @@ export default function BookingModal({ isOpen, onClose, residence }) {
                 ? `Votre demande de visite privée pour la résidence ${residence?.name} a bien été confiée à notre équipe. Un responsable des acquisitions vous contactera sous ${SLA_HOURS_MAX || 2} heures pour convenir de l'accueil et vous transmettre le dossier d'acquisition.`
                 : txType === 'location'
                 ? `Votre demande de location pour la résidence ${residence?.name} a bien été transmise. Notre conciergerie privée examinera vos critères et prendra contact avec vous sous ${SLA_HOURS_MAX || 2} heures.`
+                : isPriceMasked
+                ? `Votre demande de devis pour la résidence ${residence?.name} a bien été transmise à notre direction. Un membre de notre conciergerie privée vous contactera sous ${SLA_HOURS_MAX || 2} heures avec une proposition tarifaire détaillée.`
                 : `Vos dates ont été confiées à notre équipe. Un membre de notre conciergerie privée vous contactera sous ${SLA_HOURS_MAX || 2} heures pour finaliser votre séjour sur-mesure.`}
             </p>
 
@@ -216,15 +226,26 @@ export default function BookingModal({ isOpen, onClose, residence }) {
           <div className="relative z-10 overflow-y-auto pr-1 flex-1 custom-scrollbar">
             <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-widest text-royal mb-1">
               <span className="w-1.5 h-1.5 bg-royal rounded-full" />
-              {txType === 'vente' ? 'Protocole d\'Acquisition' : txType === 'location' ? 'Location Résidentielle' : 'Séjour d\'Exception'}
+              {txType === 'vente' ? 'Protocole d\'Acquisition' : txType === 'location' ? 'Location Résidentielle' : isPriceMasked ? 'Protocole de Cotation & Devis' : 'Séjour d\'Exception'}
             </div>
 
             <h3 className="font-serif text-2xl sm:text-3xl text-night mb-1 font-light">
-              {txType === 'vente' ? 'Visite Privée' : txType === 'location' ? 'Demande de Bail' : 'L\'Invitation'}
+              {txType === 'vente' ? 'Visite Privée' : txType === 'location' ? 'Demande de Bail' : isPriceMasked ? 'Demande de Devis' : 'L\'Invitation'}
             </h3>
-            <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-6">
-              Résidence <span className="text-gold font-semibold">{residence?.name}</span>
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+              <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-ink-muted">
+                Résidence <span className="text-gold font-semibold">{residence?.name}</span>
+              </p>
+              {isPriceMasked ? (
+                <span className="font-serif text-xs text-gold font-medium bg-gold/10 px-2 py-0.5 rounded-xs">
+                  Tarif sur demande &bull; Devis sous {SLA_HOURS_MAX || 2}h
+                </span>
+              ) : rawPrice ? (
+                <span className="font-mono text-[10px] text-ink-muted">
+                  À partir de <strong className="text-night">{new Intl.NumberFormat('fr-FR').format(rawPrice)} FCFA</strong> {txType === 'vente' ? '' : txType === 'location' ? '/ mois' : '/ nuit'}
+                </span>
+              ) : null}
+            </div>
 
             {submitError && (
               <div className="p-3 bg-red-50 text-red-800 border border-red-200 text-xs mb-5 font-sans flex items-start gap-2 rounded-sm">
@@ -376,6 +397,8 @@ export default function BookingModal({ isOpen, onClose, residence }) {
                       'Demander une visite privée'
                     ) : txType === 'location' ? (
                       'Transmettre ma demande'
+                    ) : isPriceMasked ? (
+                      'Transmettre ma demande de devis'
                     ) : (
                       'Confier ma demande'
                     )}

@@ -505,19 +505,38 @@ export default function Dashboard() {
                             {b.guests_count} Voyageur{b.guests_count > 1 ? 's' : ''}
                           </td>
                           <td className="py-6 pr-4">
-                            <div className="font-serif text-ink">{Number(b.total_price || b.amount || 0).toLocaleString('fr-FR')} FCFA</div>
+                            {b.special_requests?.includes('[DEMANDE DE DEVIS') && b.status === 'pending' ? (
+                              <div className="font-serif text-gold font-medium italic">Tarif sur devis</div>
+                            ) : Number(b.total_price || b.amount || 0) > 0 ? (
+                              <div>
+                                <div className="font-serif text-ink font-medium">{Number(b.total_price || b.amount || 0).toLocaleString('fr-FR')} FCFA</div>
+                                {b.special_requests?.includes('[DEMANDE DE DEVIS') && b.status === 'validated' && (
+                                  <div className="text-[10px] text-emerald-700 font-mono">Devis validé</div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="font-serif text-gold font-medium italic">Tarif sur devis</div>
+                            )}
                           </td>
                           <td className="py-6 pr-4">
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-2">
                                 <span className={`w-2 h-2 rounded-full ${statusDisplay.color}`} aria-hidden="true"></span>
                                 <span className="text-sm text-ink">
-                                  {statusDisplay.text}
+                                  {b.special_requests?.includes('[DEMANDE DE DEVIS')
+                                    ? (b.status === 'pending'
+                                        ? 'Devis en cours'
+                                        : b.status === 'validated'
+                                        ? 'Devis validé & Confirmé'
+                                        : statusDisplay.text)
+                                    : statusDisplay.text}
                                 </span>
                               </div>
                               {b.status === 'pending' && (
                                 <div className="text-[10px] text-amber-700 mt-1 italic max-w-[200px] leading-tight">
-                                  {b.created_at && differenceInHours(new Date(), new Date(b.created_at)) > SLA_HOURS_MAX
+                                  {b.special_requests?.includes('[DEMANDE DE DEVIS')
+                                    ? `Votre demande de devis est en cours de cotation. Réponse sous ${SLA_HOURS_MAX}h.`
+                                    : b.created_at && differenceInHours(new Date(), new Date(b.created_at)) > SLA_HOURS_MAX
                                     ? "Votre demande est toujours en cours de traitement, notre équipe vous contactera très prochainement."
                                     : `Votre demande est en cours de traitement par notre conciergerie. Réponse sous ${SLA_HOURS_MAX}h.`}
                                 </div>

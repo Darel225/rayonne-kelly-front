@@ -14,6 +14,10 @@ export default function BookingWidget({ residence }) {
   const status = residence?.status || localStorage.getItem(`rk_status_${residence?.id}`) || (residence?.is_active === 0 ? 'reserve' : 'disponible');
   const isAvailable = status === 'disponible';
 
+  const rawPrice = residence?.price_sale || residence?.price_per_night || residence?.price;
+  const priceDisplay = residence?.price_display || localStorage.getItem(`rk_price_display_${residence?.id}`) || (residence?.is_price_displayed !== undefined ? (residence?.is_price_displayed ? 'public' : 'on_demand') : (rawPrice ? 'public' : 'on_demand'));
+  const isPriceMasked = priceDisplay === 'on_demand' || !rawPrice;
+
   // Effet d'auto-ouverture (Ultra-Luxe)
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -46,10 +50,10 @@ export default function BookingWidget({ residence }) {
         <div className="relative z-10">
           <div className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-[0.3em] text-white/80 mb-6">
             <Star size={12} className="text-white fill-white/50" />
-            Service Privilège &bull; {txType === 'vente' ? 'Acquisition' : txType === 'location' ? 'Location' : 'Séjour d\'Exception'}
+            Service Privilège &bull; {txType === 'vente' ? 'Acquisition' : txType === 'location' ? 'Location' : isPriceMasked ? 'Cotation Sur-Mesure' : 'Séjour d\'Exception'}
           </div>
           <h3 className="font-serif text-2xl font-light tracking-wide text-white mb-3">
-            {txType === 'vente' ? 'Acquérir ce bien de prestige' : 'Intéressé par ce bien ?'}
+            {txType === 'vente' ? 'Acquérir ce bien de prestige' : isPriceMasked ? 'Demander un devis' : 'Intéressé par ce bien ?'}
           </h3>
           <p className="text-xs text-white/80 font-medium tracking-wide mb-8">
             {status === 'vendu'
@@ -59,10 +63,12 @@ export default function BookingWidget({ residence }) {
               : status === 'reserve'
               ? 'Une option est actuellement posée sur cette résidence.'
               : txType === 'vente'
-              ? '✓ Accompagnement notarié &bull; Dossier d\'acquisition et visite sur rendez-vous'
+              ? '✓ Accompagnement notarié • Dossier d\'acquisition et visite sur rendez-vous'
               : txType === 'location'
-              ? '✓ Bail résidentiel &bull; Garanties d\'usage'
-              : '✓ Formule tout inclus &bull; Tarifs ajustables selon la durée'}
+              ? '✓ Bail résidentiel • Garanties d\'usage'
+              : isPriceMasked
+              ? '✓ Tarif sur devis • Proposition chiffrée selon vos dates et exigences'
+              : '✓ Formule tout inclus • Tarifs ajustables selon la durée'}
           </p>
 
           <div className="space-y-4">
@@ -110,24 +116,36 @@ export default function BookingWidget({ residence }) {
               >
                 Demande de location &bull; Visite
               </button>
+            ) : isPriceMasked ? (
+              <button 
+                type="button" 
+                onClick={handleBookingClick}
+                className="w-full flex items-center justify-center bg-gold px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-night transition-all duration-300 hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-sm font-semibold"
+              >
+                Demander un devis personnalisé
+              </button>
             ) : (
               <button 
-                type="button"
+                type="button" 
                 onClick={handleBookingClick}
                 className="w-full flex items-center justify-center bg-white px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-royal transition-all duration-300 hover:bg-gray-100 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-sm"
               >
-                Vérifier la disponibilité
+                Vérifier la disponibilité • Réserver
               </button>
             )}
 
             <a
-              href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=Bonjour, je souhaite me renseigner sur la résidence ${residence?.name} (Réf: ${residence?.reference})`}
+              href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=${encodeURIComponent(
+                isPriceMasked
+                  ? `Bonjour Rayonne Kelly, je souhaite obtenir un devis personnalisé pour la résidence ${residence?.name} (Réf: ${residence?.reference}). Pouvez-vous me communiquer vos disponibilités et proposition tarifaire ?`
+                  : `Bonjour, je souhaite me renseigner sur la résidence ${residence?.name} (Réf: ${residence?.reference})`
+              )}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center bg-[#25D366] px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-white transition-all duration-300 hover:bg-[#128C7E] hover:shadow-[0_0_20px_rgba(37,211,102,0.4)] rounded-sm gap-3"
             >
               <MessageCircle size={16} />
-              Échanger sur WhatsApp
+              {isPriceMasked ? 'Devis via WhatsApp' : 'Échanger sur WhatsApp'}
             </a>
 
             <a

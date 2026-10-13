@@ -47,6 +47,10 @@ export default function ResidenceCard({ residence, index }) {
 
   const rawPrice = residence.pricePerNight || residence.price_per_night || residence.price || residence.price_sale;
 
+  // Détection de la politique tarifaire : autorisée ('public') ou masquée ('on_demand')
+  const priceDisplay = residence.price_display || localStorage.getItem(`rk_price_display_${residence.id}`) || (residence.is_price_displayed !== undefined ? (residence.is_price_displayed ? 'public' : 'on_demand') : (rawPrice ? 'public' : 'on_demand'));
+  const isPriceMasked = priceDisplay === 'on_demand' || !rawPrice;
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 30 }}
@@ -163,17 +167,22 @@ export default function ResidenceCard({ residence, index }) {
             ].filter(Boolean).join(" • ")}
           </div>
 
-          {/* Ligne 4 : Prix adapté au type de transaction */}
+          {/* Ligne 4 : Prix adapté au type de transaction et politique tarifaire */}
           <div className="flex items-baseline mb-5">
-            {rawPrice ? (
+            {!isPriceMasked && rawPrice ? (
               <>
+                <span className="text-[10px] font-sans font-medium text-ink-muted uppercase tracking-wider mr-1.5">
+                  À partir de
+                </span>
                 <span className="font-serif text-xl font-medium text-night">{formatPrice(rawPrice)}</span>
                 <span className="text-xs text-ink-muted ml-1.5">
                   {txType === 'vente' ? '' : txType === 'location' ? '/ mois' : '/ nuit'}
                 </span>
               </>
             ) : (
-              <span className="font-serif text-xl font-medium text-night">Sur demande</span>
+              <span className="font-serif text-lg font-medium text-gold tracking-wide">
+                Tarif sur demande
+              </span>
             )}
           </div>
         </Link>
@@ -208,6 +217,13 @@ export default function ResidenceCard({ residence, index }) {
               className="border border-night/20 text-night px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-night hover:text-white transition-colors rounded-sm"
             >
               Consulter
+            </Link>
+          ) : isPriceMasked ? (
+            <Link
+              to={`/collection/${residence.slug || residence.id}?action=booking`}
+              className="bg-night text-white px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-royal transition-colors duration-500 rounded-sm whitespace-nowrap"
+            >
+              Demander un devis
             </Link>
           ) : (
             <Link

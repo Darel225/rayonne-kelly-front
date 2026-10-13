@@ -220,6 +220,10 @@ export default function ResidenceDetails() {
   const status = residence?.status || localStorage.getItem(`rk_status_${residence?.id}`) || (residence?.is_active === 0 ? 'reserve' : 'disponible');
   const isAvailable = status === 'disponible';
 
+  const rawPrice = residence?.price_sale || residence?.price_per_night || residence?.price;
+  const priceDisplay = residence?.price_display || localStorage.getItem(`rk_price_display_${residence?.id}`) || (residence?.is_price_displayed !== undefined ? (residence?.is_price_displayed ? 'public' : 'on_demand') : (rawPrice ? 'public' : 'on_demand'));
+  const isPriceMasked = priceDisplay === 'on_demand' || !rawPrice;
+
   return (
     <main className="pt-32 pb-24 min-h-screen bg-mist">
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto px-6">
@@ -338,12 +342,26 @@ export default function ResidenceDetails() {
               <MapPin size={18} className="text-gold" />
               {residence.address ? `${residence.address}, ` : ''}{residence.district}
             </motion.p>
-            {(residence.price_per_night || residence.price || residence.price_sale) && (
+            {!isPriceMasked && rawPrice ? (
               <motion.div variants={itemVariants} className="font-serif text-xl md:text-2xl font-light tracking-wider text-night mt-4 flex items-baseline gap-2">
-                {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(residence.price_sale || residence.price_per_night || residence.price)}
+                <span className="text-[11px] font-sans font-medium text-ink-muted uppercase tracking-[0.2em]">
+                  À partir de
+                </span>
+                <span className="font-medium">
+                  {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(rawPrice)}
+                </span>
                 <span className="text-[10px] font-sans font-medium text-ink-muted uppercase tracking-[0.2em]">
                   FCFA {txType === 'vente' ? '(Prix de vente)' : txType === 'location' ? '/ mois' : '/ nuit'}
                 </span>
+              </motion.div>
+            ) : (
+              <motion.div variants={itemVariants} className="mt-4 flex flex-col gap-1">
+                <div className="font-serif text-xl md:text-2xl font-medium text-gold tracking-wide">
+                  Tarif sur demande
+                </div>
+                <p className="text-xs text-ink-muted">
+                  Devis personnalisé établi selon vos dates et la durée du séjour
+                </p>
               </motion.div>
             )}
           </motion.div>

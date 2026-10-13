@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Mail, Phone, Loader2, AlertCircle, ArrowRight, ArrowDown, Check } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Loader2, AlertCircle, ArrowRight, ArrowDown, Check, FileText } from 'lucide-react';
 import api from '../../services/api';
 import { getImageUrl } from '../../utils/getImageUrl';
 import { toast } from 'sonner';
@@ -165,6 +165,11 @@ export default function BookingDetails() {
     });
   }
 
+  const isQuoteRequest = booking.special_requests?.includes('[DEMANDE DE DEVIS') || residence?.price_display === 'on_demand';
+  const cleanSpecialRequests = (booking.special_requests || '')
+    .replace('[DEMANDE DE DEVIS PERSONNALISÉ / TARIF SUR DEMANDE]', '')
+    .trim();
+
   return (
     <div className="max-w-7xl mx-auto pb-12">
       {/* Back Link */}
@@ -178,11 +183,11 @@ export default function BookingDetails() {
         <div className="lg:col-span-2 space-y-10">
 
           <div>
-            {residence?.images?.[0] ? (
+            {residence?.images?.[0]?.image_url || residence?.cover_image_url ? (
               <img
-                src={getImageUrl(residence.images[0].image_url)}
-                alt={`Photo de la résidence ${residence.name}`}
-                onError={(e) => { e.target.onerror = null; e.target.src = getImageUrl(null); }}
+                src={getImageUrl(residence.images?.[0]?.image_url || residence?.cover_image_url) || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80'}
+                alt={`Photo de la résidence ${residence?.name || booking?.residence_name || ''}`}
+                onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80'; }}
                 className="h-80 w-full object-cover rounded-lg"
               />
             ) : (
@@ -199,11 +204,31 @@ export default function BookingDetails() {
                   Capacité de base : {residence?.max_guests || '-'} voyageurs • {residence?.rooms_count || '-'} Pièces
                 </div>
               </div>
-              <div className="flex items-center gap-2 bg-white px-3 py-1.5 border border-ink/10 rounded-full shrink-0 shadow-sm">
-                <span className={`w-2 h-2 rounded-full ${statusInfo.color}`} aria-hidden="true"></span>
-                <span className="text-xs uppercase tracking-widest text-ink font-medium">Dossier {booking.reference} — {statusInfo.label}</span>
+              <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 border border-ink/10 rounded-full shrink-0 shadow-sm">
+                <span className={`w-2.5 h-2.5 rounded-full ${isQuoteRequest && booking.status === 'pending' ? 'bg-amber-500 animate-pulse' : statusInfo.color}`} aria-hidden="true"></span>
+                <span className="text-xs uppercase tracking-widest text-ink font-medium">
+                  Dossier {booking.reference} — {isQuoteRequest ? 'Demande de Devis' : statusInfo.label} {isQuoteRequest && booking.status === 'pending' ? '(En attente)' : ''}
+                </span>
               </div>
             </div>
+
+            {/* Alerte Devis Personnalisé pour l'Administrateur */}
+            {isQuoteRequest && (
+              <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-sm flex items-start gap-3.5 shadow-xs">
+                <FileText className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <div className="text-xs font-mono uppercase tracking-wider font-bold text-amber-900 flex items-center gap-2">
+                    Demande de Devis Personnalisé &bull; Tarif Masqué
+                    <span className="text-[9px] bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-xs font-mono font-bold">Engagement SLA 2h</span>
+                  </div>
+                  <p className="text-xs text-amber-900/85 mt-1 leading-relaxed">
+                    Ce client a sollicité une proposition tarifaire pour un bien dont le prix public est masqué (« Tarif sur demande »).
+                    Le tarif calculé en base ({parseFloat(booking.total_price).toLocaleString('fr-FR')} FCFA) est indicatif et n'a <strong>pas été affiché</strong> au client.
+                    Veuillez contacter le client au <strong>{booking.user_phone || booking.user_email}</strong> pour convenir de votre proposition tarifaire sur-mesure.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {(booking.status === 'cancellation_requested' || booking.status === 'modification_requested') && (
@@ -297,8 +322,15 @@ export default function BookingDetails() {
                 </div>
                 <div>
                   <span className="text-sm text-ink-muted block mb-2">Demandes particulières :</span>
+                  {isQuoteRequest && (
+                    <div className="mb-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xs bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-mono uppercase font-semibold">
+                        📋 Demande de Cotation Sur-Mesure
+                      </span>
+                    </div>
+                  )}
                   <div className="text-sm font-medium text-ink italic p-3 bg-gray-50/50 rounded-sm">
-                    {booking.special_requests || "Aucune demande particulière."}
+                    {cleanSpecialRequests || (isQuoteRequest ? "Le client souhaite recevoir votre cotation selon les dates choisies." : "Aucune demande particulière.")}
                   </div>
                 </div>
               </div>
@@ -308,10 +340,21 @@ export default function BookingDetails() {
 
             {/* Total */}
             <div>
-              <div className="flex justify-between items-end mb-6">
-                <span className="text-sm text-ink">Total du séjour</span>
+              <div className="flex justify-between items-baseline mb-6">
+                <div>
+                  <span className="text-sm text-ink block font-medium">
+                    {isQuoteRequest ? 'Tarif indicatif interne' : 'Total du séjour'}
+                  </span>
+                  {isQuoteRequest && (
+                    <span className="text-[10px] text-amber-700 font-mono block mt-0.5">
+                      (Masqué au client • Devis à établir)
+                    </span>
+                  )}
+                </div>
                 <span className="font-serif text-2xl text-ink">
-                  {parseFloat(booking.total_price).toLocaleString('fr-FR')} FCFA
+                  {parseFloat(booking.total_price) > 0 
+                    ? `${parseFloat(booking.total_price).toLocaleString('fr-FR')} FCFA`
+                    : 'Tarif sur devis'}
                 </span>
               </div>
 
@@ -322,14 +365,14 @@ export default function BookingDetails() {
                     <button 
                       onClick={() => handleStatusUpdate('validated')}
                       disabled={actionLoading}
-                      className="w-full bg-royal text-white py-3 text-xs uppercase tracking-widest font-mono hover:bg-royal-dark transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="w-full bg-royal text-white py-3 text-xs uppercase tracking-widest font-mono hover:bg-royal-dark transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                     >
-                      {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Valider la réservation"}
+                      {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (isQuoteRequest ? "Valider le devis & Confirmer" : "Valider la réservation")}
                     </button>
                     <button 
                       onClick={() => handleStatusUpdate('rejected')}
                       disabled={actionLoading}
-                      className="w-full border border-red-200 text-red-600 bg-red-50/30 py-3 text-xs uppercase tracking-widest font-mono hover:bg-red-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="w-full border border-red-200 text-red-600 bg-red-50/30 py-3 text-xs uppercase tracking-widest font-mono hover:bg-red-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                     >
                       {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Décliner"}
                     </button>
