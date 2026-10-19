@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import api from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import bgImage from '../../assets/images/connexion-ins.jpeg';
+import logo from '../../assets/images/logo.png';
 
 const BG_IMAGE_URL = bgImage;
 
@@ -153,9 +154,9 @@ export default function Auth() {
   };
 
   return (
-    <div className="h-screen w-full grid grid-cols-1 lg:grid-cols-2 overflow-hidden bg-white">
-      {/* Left panel */}
-      <aside className="relative hidden lg:flex flex-col justify-between overflow-hidden p-12 text-white">
+    <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-ivory">
+      {/* Left panel (Desktop luxury showcase) */}
+      <aside className="relative hidden lg:flex flex-col justify-between overflow-hidden p-12 text-white min-h-screen sticky top-0 h-screen">
         <img
           src={BG_IMAGE_URL}
           alt=""
@@ -167,9 +168,9 @@ export default function Auth() {
 
         {/* Top row */}
         <div className="relative z-10 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-full border border-white/30 flex items-center justify-center">
-              <Box className="h-5 w-5 text-gold" />
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="h-11 w-11 rounded-full border border-white/30 bg-white/10 backdrop-blur-md p-1.5 flex items-center justify-center transition-transform group-hover:scale-105">
+              <img src={logo} alt="Rayonne Kelly" className="w-full h-full object-contain" />
             </div>
             <div>
               <div className="text-[10px] uppercase tracking-[0.3em] text-gold font-bold">
@@ -179,7 +180,7 @@ export default function Auth() {
                 Rayonne Kelly
               </div>
             </div>
-          </div>
+          </Link>
           <div className="border border-white/20 bg-white/10 backdrop-blur rounded-full px-4 py-1.5 text-[10px] uppercase tracking-widest">
             Off-Market Protocol
           </div>
@@ -209,40 +210,45 @@ export default function Auth() {
       </aside>
 
       {/* Right panel */}
-      <main className="w-full flex flex-col justify-center h-full bg-ivory px-8 sm:px-16 lg:px-24">
-        <div className="w-full max-w-md mx-auto">
+      <main className="w-full flex flex-col justify-center min-h-screen lg:min-h-0 lg:h-full lg:overflow-y-auto bg-ivory px-5 sm:px-12 md:px-16 lg:px-20 py-8 sm:py-12">
+        <div className="w-full max-w-md mx-auto my-auto">
           {/* Mobile-only brand */}
-          <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="h-11 w-11 rounded-full border border-ink/30 flex items-center justify-center">
-              <Box className="h-5 w-5 text-gold" />
-            </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-gold font-bold">
-                Habilitation Confidentielle
+          <div className="lg:hidden flex items-center justify-between gap-3 mb-8 pb-4 border-b border-ink/10">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="h-10 w-10 rounded-full border border-ink/15 bg-white p-1 flex items-center justify-center shadow-xs">
+                <img src={logo} alt="Rayonne Kelly" className="w-full h-full object-contain" />
               </div>
-              <div className="font-serif text-sm text-ink">
-                Rayonne Kelly
+              <div>
+                <div className="text-[9px] uppercase tracking-[0.25em] text-gold font-bold">
+                  Habilitation Confidentielle
+                </div>
+                <div className="font-serif text-sm text-ink font-semibold group-hover:text-royal transition-colors">
+                  Rayonne Kelly
+                </div>
               </div>
-            </div>
+            </Link>
+            <Link to="/" className="text-[10px] uppercase tracking-widest text-ink-muted hover:text-royal font-semibold py-1 px-3 rounded-full border border-ink/10 bg-white/60">
+              Accueil →
+            </Link>
           </div>
 
           {/* Header */}
-          <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-royal mb-4">
+          <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-royal mb-2">
             Espace Sécurisé
           </div>
-          <h2 className="font-serif text-4xl text-ink">Authentification Privée</h2>
-          <p className="text-sm text-ink-muted mt-2 mb-6">
-            Annuaire de résidences d'exception et locations de prestiges.
+          <h2 className="font-serif text-3xl sm:text-4xl text-ink">Authentification Privée</h2>
+          <p className="text-xs sm:text-sm text-ink-muted mt-1.5 mb-6">
+            Annuaire de résidences d'exception et locations de prestige.
           </p>
 
           {/* Tabs */}
-          <div role="tablist" className="flex border-b border-ink/10 mb-5 gap-16">
+          <div role="tablist" className="flex border-b border-ink/10 mb-6 gap-8 sm:gap-14">
             <button
               role="tab"
               aria-selected={mode === 'login'}
               onClick={() => handleModeSwitch('login')}
-              className={`pb-3 text-xs uppercase tracking-[0.2em] -mb-px transition-colors ${mode === 'login'
-                  ? 'text-ink border-b-2 border-ink'
+              className={`pb-3 text-xs uppercase tracking-[0.2em] -mb-px transition-colors cursor-pointer ${mode === 'login'
+                  ? 'text-royal font-bold border-b-2 border-royal'
                   : 'text-ink-muted hover:text-ink'
                 }`}
             >
@@ -252,8 +258,8 @@ export default function Auth() {
               role="tab"
               aria-selected={mode === 'register'}
               onClick={() => handleModeSwitch('register')}
-              className={`pb-3 text-xs uppercase tracking-[0.2em] -mb-px transition-colors ${mode === 'register'
-                  ? 'text-ink border-b-2 border-ink'
+              className={`pb-3 text-xs uppercase tracking-[0.2em] -mb-px transition-colors cursor-pointer ${mode === 'register'
+                  ? 'text-royal font-bold border-b-2 border-royal'
                   : 'text-ink-muted hover:text-ink'
                 }`}
             >
@@ -263,45 +269,49 @@ export default function Auth() {
 
           {/* Forms */}
           {mode === 'login' ? (
-            <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-8">
+            <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
               <div className="relative">
-                <label htmlFor="login-email" className="block text-[10px] font-bold uppercase tracking-[0.25em] text-ink mb-2">
-                  Identifiant Confidentiel / Email
+                <label htmlFor="login-email" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-ink mb-1.5">
+                  Identifiant Confidentiel / Email *
                 </label>
-                <input
-                  id="login-email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="acquisitions@kelly-patrimoine.com"
-                  {...loginForm.register("email")}
-                  className={`w-full bg-transparent border-0 border-b py-3 pr-10 text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none ${loginForm.formState.errors.email ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
-                />
-                <AtSign className="absolute right-0 top-9 h-4 w-4 text-ink-muted" />
+                <div className="relative">
+                  <input
+                    id="login-email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="votre.email@exemple.com"
+                    {...loginForm.register("email")}
+                    className={`w-full bg-transparent border-0 border-b py-2.5 sm:py-3 pr-10 text-sm text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none transition-colors ${loginForm.formState.errors.email ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
+                  />
+                  <AtSign className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted pointer-events-none" />
+                </div>
                 {loginForm.formState.errors.email && (
                   <p className="text-xs text-red-500 mt-1">{loginForm.formState.errors.email.message}</p>
                 )}
               </div>
 
               <div className="relative">
-                <label htmlFor="login-password" className="block text-[10px] font-bold uppercase tracking-[0.25em] text-ink mb-2">
-                  Clé d'Accès Sécurisée
+                <label htmlFor="login-password" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-ink mb-1.5">
+                  Clé d'Accès Sécurisée *
                 </label>
-                <input
-                  id="login-password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  placeholder="••••••••••••••••"
-                  {...loginForm.register("password")}
-                  className={`w-full bg-transparent border-0 border-b py-3 pr-10 text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none ${loginForm.formState.errors.password ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label="Afficher le mot de passe"
-                  className="absolute right-0 top-9 text-ink-muted hover:text-ink"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder="••••••••••••••••"
+                    {...loginForm.register("password")}
+                    className={`w-full bg-transparent border-0 border-b py-2.5 sm:py-3 pr-10 text-sm text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none transition-colors ${loginForm.formState.errors.password ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label="Afficher le mot de passe"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-ink-muted hover:text-ink cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {loginForm.formState.errors.password && (
                   <p className="text-xs text-red-500 mt-1">{loginForm.formState.errors.password.message}</p>
                 )}
@@ -310,7 +320,7 @@ export default function Auth() {
               <Button
                 type="submit"
                 variant="primary"
-                className="w-full py-4 mt-6 uppercase tracking-[0.3em] text-[10px] lg:text-xs"
+                className="w-full py-4 mt-6 uppercase tracking-[0.25em] text-[10px] sm:text-xs rounded-full shadow-md cursor-pointer hover:bg-royal transition-colors"
                 icon={ArrowRight}
                 isLoading={loginForm.formState.isSubmitting}
               >
@@ -318,121 +328,136 @@ export default function Auth() {
               </Button>
             </form>
           ) : (
-            <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)}>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3 mb-5">
+            <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 sm:space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                {/* Nom */}
                 <div className="relative">
-                  <label htmlFor="register-lastName" className="block text-[10px] font-bold uppercase tracking-[0.25em] text-ink mb-2">
-                    NOM DE FAMILLE
+                  <label htmlFor="register-lastName" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-ink mb-1.5">
+                    Nom de famille *
                   </label>
                   <input
                     id="register-lastName"
                     type="text"
                     autoComplete="family-name"
-                    placeholder="Votre nom"
+                    placeholder="Ex: Koné"
                     {...registerForm.register("lastName")}
-                    className={`w-full bg-transparent border-0 border-b py-3 text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none ${registerForm.formState.errors.lastName ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
+                    className={`w-full bg-transparent border-0 border-b py-2.5 sm:py-3 text-sm text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none transition-colors ${registerForm.formState.errors.lastName ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
                   />
                   {registerForm.formState.errors.lastName && (
                     <p className="text-xs text-red-500 mt-1">{registerForm.formState.errors.lastName.message}</p>
                   )}
                 </div>
 
+                {/* Prénoms */}
                 <div className="relative">
-                  <label htmlFor="register-firstName" className="block text-[10px] font-bold uppercase tracking-[0.25em] text-ink mb-2">
-                    PRÉNOMS
+                  <label htmlFor="register-firstName" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-ink mb-1.5">
+                    Prénoms *
                   </label>
                   <input
                     id="register-firstName"
                     type="text"
                     autoComplete="given-name"
-                    placeholder="Vos prénoms"
+                    placeholder="Ex: Sarah Marie"
                     {...registerForm.register("firstName")}
-                    className={`w-full bg-transparent border-0 border-b py-3 text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none ${registerForm.formState.errors.firstName ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
+                    className={`w-full bg-transparent border-0 border-b py-2.5 sm:py-3 text-sm text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none transition-colors ${registerForm.formState.errors.firstName ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
                   />
                   {registerForm.formState.errors.firstName && (
                     <p className="text-xs text-red-500 mt-1">{registerForm.formState.errors.firstName.message}</p>
                   )}
                 </div>
 
-                <div className="relative">
-                  <label htmlFor="register-email" className="block text-[10px] font-bold uppercase tracking-[0.25em] text-ink mb-2">
-                    ADRESSE EMAIL
+                {/* Email (Pleine largeur) */}
+                <div className="relative sm:col-span-2">
+                  <label htmlFor="register-email" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-ink mb-1.5">
+                    Adresse e-mail *
                   </label>
-                  <input
-                    id="register-email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="acquisitions@kelly.com"
-                    {...registerForm.register("email")}
-                    className={`w-full bg-transparent border-0 border-b py-3 pr-10 text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none ${registerForm.formState.errors.email ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
-                  />
-                  <AtSign className="absolute right-0 top-9 h-4 w-4 text-ink-muted" />
+                  <div className="relative">
+                    <input
+                      id="register-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="votre.email@exemple.com"
+                      {...registerForm.register("email")}
+                      className={`w-full bg-transparent border-0 border-b py-2.5 sm:py-3 pr-10 text-sm text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none transition-colors ${registerForm.formState.errors.email ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
+                    />
+                    <AtSign className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted pointer-events-none" />
+                  </div>
                   {registerForm.formState.errors.email && (
                     <p className="text-xs text-red-500 mt-1">{registerForm.formState.errors.email.message}</p>
                   )}
                 </div>
 
-                <div className="relative">
-                  <label htmlFor="register-phone" className="block text-[10px] font-bold uppercase tracking-[0.25em] text-ink mb-2">
-                    TÉLÉPHONE (WHATSAPP)
+                {/* Téléphone WhatsApp (Pleine largeur) */}
+                <div className="relative sm:col-span-2">
+                  <label htmlFor="register-phone" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-ink mb-1.5">
+                    Téléphone WhatsApp *
                   </label>
-                  <input
-                    id="register-phone"
-                    type="tel"
-                    autoComplete="tel"
-                    placeholder="+225 00 00 00 00 00"
-                    {...registerForm.register("phone")}
-                    className={`w-full bg-transparent border-0 border-b py-3 pr-10 text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none ${registerForm.formState.errors.phone ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
-                  />
-                  <Phone className="absolute right-0 top-9 h-4 w-4 text-ink-muted" />
+                  <div className="relative">
+                    <input
+                      id="register-phone"
+                      type="tel"
+                      autoComplete="tel"
+                      placeholder="+225 07 00 00 00 00"
+                      {...registerForm.register("phone")}
+                      className={`w-full bg-transparent border-0 border-b py-2.5 sm:py-3 pr-10 text-sm text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none transition-colors ${registerForm.formState.errors.phone ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
+                    />
+                    <Phone className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted pointer-events-none" />
+                  </div>
                   {registerForm.formState.errors.phone && (
                     <p className="text-xs text-red-500 mt-1">{registerForm.formState.errors.phone.message}</p>
                   )}
                 </div>
 
+                {/* Mot de passe */}
                 <div className="relative">
-                  <label htmlFor="register-password" className="block text-[10px] font-bold uppercase tracking-[0.25em] text-ink mb-2">
-                    MOT DE PASSE
+                  <label htmlFor="register-password" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-ink mb-1.5">
+                    Mot de passe *
                   </label>
-                  <input
-                    id="register-password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    placeholder="••••••••••••••••"
-                    {...registerForm.register("password")}
-                    className={`w-full bg-transparent border-0 border-b py-3 pr-10 text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none ${registerForm.formState.errors.password ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label="Afficher le mot de passe"
-                    className="absolute right-0 top-9 text-ink-muted hover:text-ink"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+                  <div className="relative">
+                    <input
+                      id="register-password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      placeholder="••••••••••••••••"
+                      {...registerForm.register("password")}
+                      className={`w-full bg-transparent border-0 border-b py-2.5 sm:py-3 pr-10 text-sm text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none transition-colors ${registerForm.formState.errors.password ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label="Afficher le mot de passe"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-ink-muted hover:text-ink cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                   {registerForm.formState.errors.password && (
                     <p className="text-xs text-red-500 mt-1">{registerForm.formState.errors.password.message}</p>
                   )}
                 </div>
 
+                {/* Confirmer mot de passe */}
                 <div className="relative">
-                  <label htmlFor="register-confirmPassword" className="block text-[10px] font-bold uppercase tracking-[0.25em] text-ink mb-2">
-                    CONFIRMER LE MOT DE PASSE
+                  <label htmlFor="register-confirmPassword" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-ink mb-1.5">
+                    Confirmer mot de passe *
                   </label>
-                  <input
-                    id="register-confirmPassword"
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="••••••••••••••••"
-                    {...registerForm.register("confirmPassword")}
-                    className={`w-full bg-transparent border-0 border-b py-3 pr-10 text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none ${registerForm.formState.errors.confirmPassword ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
-                  />
+                  <div className="relative">
+                    <input
+                      id="register-confirmPassword"
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="••••••••••••••••"
+                      {...registerForm.register("confirmPassword")}
+                      className={`w-full bg-transparent border-0 border-b py-2.5 sm:py-3 pr-10 text-sm text-ink placeholder:italic placeholder:text-ink-muted/50 focus:outline-none transition-colors ${registerForm.formState.errors.confirmPassword ? 'border-red-500 focus:border-red-500' : 'border-ink/20 focus:border-royal'}`}
+                    />
+                  </div>
                   {registerForm.formState.errors.confirmPassword && (
                     <p className="text-xs text-red-500 mt-1">{registerForm.formState.errors.confirmPassword.message}</p>
                   )}
                 </div>
               </div>
 
+              {/* Conditions & Confidentialité */}
               <div className="pt-2">
                 <label className="flex items-start gap-3 cursor-pointer group select-none">
                   <input
@@ -461,7 +486,7 @@ export default function Auth() {
               <Button
                 type="submit"
                 variant="primary"
-                className="w-full py-4 uppercase tracking-[0.3em] text-[10px] lg:text-xs"
+                className="w-full py-4 uppercase tracking-[0.25em] text-[10px] sm:text-xs rounded-full shadow-md cursor-pointer hover:bg-royal transition-colors"
                 icon={ArrowRight}
                 isLoading={registerForm.formState.isSubmitting}
               >
@@ -471,9 +496,9 @@ export default function Auth() {
           )}
 
           {/* Security note */}
-          <div className="flex gap-3 items-start border-t border-ink/10 mt-6 pt-4 text-left">
-            <ShieldCheck className="h-4 w-4 shrink-0 text-royal" />
-            <p className="text-xs leading-relaxed text-ink-muted">
+          <div className="flex gap-3 items-start border-t border-ink/10 mt-8 pt-4 text-left">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-royal mt-0.5" />
+            <p className="text-[11px] leading-relaxed text-ink-muted">
               Protocole chiffré SSL 256-bit &middot; Session protégée sous clause stricte de secret d'affaires et mandat de représentation.
             </p>
           </div>
