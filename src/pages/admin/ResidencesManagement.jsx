@@ -19,8 +19,7 @@ import {
 import Button from '../../components/common/Button';
 import api from '../../services/api';
 import { getTransactionType, getResidenceStatus, TRANSACTION_TYPES, RESIDENCE_STATUSES } from '../../constants/residenceConstants';
-
-const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '');
+import { getResidenceCoverImage, FALLBACK_IMAGE } from '../../utils/getImageUrl';
 
 const getStatusBadge = (statusObj, isActive) => {
   if (!isActive) {
@@ -43,10 +42,7 @@ const getStatusBadge = (statusObj, isActive) => {
 };
 
 const mapResidence = (row) => {
-  let imgUrl = row.cover_image_url;
-  if (imgUrl && imgUrl.startsWith('/')) {
-    imgUrl = `${BACKEND_URL}${imgUrl}`;
-  }
+  const imgUrl = getResidenceCoverImage(row);
 
   const rawTx = row.transaction_type || (typeof window !== 'undefined' ? localStorage.getItem(`rk_tx_type_${row.id}`) : null) || 'meuble';
   const rawStatus = row.status || (typeof window !== 'undefined' ? localStorage.getItem(`rk_status_${row.id}`) : null) || 'disponible';
@@ -78,7 +74,7 @@ const mapResidence = (row) => {
     priceSuffix: txTypeObj.priceSuffix,
     priceDisplay: rawPriceDisplay,
     isPriceMasked,
-    img: imgUrl || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80',
+    img: imgUrl,
     isActive,
     transactionType: txTypeObj,
     statusValue: statusObj.value,
@@ -108,9 +104,37 @@ export default function ResidencesManagement() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await api.get('/admin/residences', { signal: controller?.signal });
-      const responseData = response.data?.data || response.data || response || [];
-      const mapped = (Array.isArray(responseData) ? responseData : []).map(mapResidence);
+      const [adminRes, publicRes] = await Promise.allSettled([
+        api.get('/admin/residences', { signal: controller?.signal }),
+        api.get('/residences', { signal: controller?.signal })
+      ]);
+
+      const adminData = adminRes.status === 'fulfilled' 
+        ? (adminRes.value.data?.data || adminRes.value.data || adminRes.value || []) 
+        : [];
+      const publicData = publicRes.status === 'fulfilled'
+        ? (Array.isArray(publicRes.value) ? publicRes.value : (publicRes.value?.data || []))
+        : [];
+
+      // Map des résidences publiques pour enrichir les galeries d'images réelles
+      const publicMap = new Map();
+      publicData.forEach(item => {
+        if (item && item.id) publicMap.set(item.id, item);
+        if (item && item.slug) publicMap.set(item.slug, item);
+      });
+
+      const rawList = Array.isArray(adminData) && adminData.length > 0 ? adminData : publicData;
+      const mapped = rawList.map(row => {
+        const publicMatch = publicMap.get(row.id) || publicMap.get(row.slug) || {};
+        const mergedRow = {
+          ...publicMatch,
+          ...row,
+          images: (Array.isArray(row.images) && row.images.length > 0) ? row.images : (publicMatch.images || []),
+          cover_image_url: row.cover_image_url || publicMatch.cover_image_url || ''
+        };
+        return mapResidence(mergedRow);
+      });
+
       setProperties(mapped);
     } catch (err) {
       if (err.name === 'AbortError' || err.name === 'CanceledError') return;
@@ -122,6 +146,7 @@ export default function ResidencesManagement() {
       setIsLoading(false);
     }
   }, []);
+
 
   useEffect(() => {
     const controller = new AbortController();
@@ -452,6 +477,10 @@ export default function ResidencesManagement() {
                   alt={prop.name} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
                   loading="lazy" 
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = FALLBACK_IMAGE;
+                  }}
                 />
                 
                 {/* Badge statut commercial */}

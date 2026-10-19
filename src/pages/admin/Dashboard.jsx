@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ChevronRight, Pencil, Loader2, AlertCircle } from 'lucide-react';
 import Button from '../../components/common/Button';
 import api from '../../services/api';
-import { getImageUrl } from '../../utils/getImageUrl';
+import { getImageUrl, getResidenceCoverImage, FALLBACK_IMAGE } from '../../utils/getImageUrl';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -390,14 +390,14 @@ export default function Dashboard() {
               <div key={residence.id} className="group cursor-pointer" onClick={() => navigate(`/admin/residences/${residence.id}/edit`)}>
                 <div className="relative aspect-[4/3] overflow-hidden rounded-sm mb-5">
                   <img
-                    src={residence.cover_image_url ? getImageUrl(residence.cover_image_url) : ''}
+                    src={getResidenceCoverImage(residence)}
                     alt={residence.name}
                     loading="lazy"
                     decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlNWU3ZWIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBpbmRpc3BvbmlibGU8L3RleHQ+PC9zdmc+';
+                      e.target.src = FALLBACK_IMAGE;
                     }}
                   />
                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 text-[10px] uppercase font-mono tracking-widest text-ink rounded-sm">
