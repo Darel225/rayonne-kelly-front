@@ -161,7 +161,7 @@ export default function BookingModal({ isOpen, onClose, residence }) {
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6">
       {/* Fond flouté sombre */}
       <div 
         className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
@@ -169,7 +169,7 @@ export default function BookingModal({ isOpen, onClose, residence }) {
       />
 
       {/* Conteneur de la Modale */}
-      <div className="bg-white shadow-2xl p-6 sm:p-8 max-w-xl w-full relative animate-in fade-in zoom-in duration-500 overflow-hidden rounded-sm flex flex-col max-h-[92vh]">
+      <div className="bg-white shadow-2xl p-5 sm:p-8 max-w-xl w-full relative animate-in fade-in zoom-in duration-500 overflow-hidden rounded-2xl sm:rounded-3xl flex flex-col max-h-[92vh]">
         
         {/* Décoration d'arrière-plan très subtile */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
@@ -177,10 +177,10 @@ export default function BookingModal({ isOpen, onClose, residence }) {
         {!isSuccess && (
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 text-ink-muted hover:text-ink transition-colors z-20"
+            className="absolute top-4 right-4 sm:top-5 sm:right-5 p-2 text-ink-muted hover:text-ink transition-colors z-20 cursor-pointer"
             aria-label="Fermer"
           >
-            <X size={24} strokeWidth={1.5} />
+            <X size={22} strokeWidth={1.5} />
           </button>
         )}
         
@@ -216,7 +216,7 @@ export default function BookingModal({ isOpen, onClose, residence }) {
 
             <button
               onClick={onClose}
-              className="px-8 py-4 bg-night text-white text-[10px] uppercase tracking-[0.2em] font-semibold hover:bg-black transition-all duration-500 w-full sm:w-auto"
+              className="px-8 py-4 bg-night text-white text-[10px] uppercase tracking-[0.2em] font-semibold hover:bg-black transition-all duration-500 w-full sm:w-auto rounded-full cursor-pointer"
             >
               Retourner à la collection
             </button>
@@ -383,7 +383,7 @@ export default function BookingModal({ isOpen, onClose, residence }) {
                 <button
                   type="submit"
                   disabled={isSubmitting || !rgpdConsent || !bookingData.check_in_date || (txType !== 'vente' && !bookingData.check_out_date)}
-                  className="relative w-full bg-night text-white py-4 sm:py-5 text-[10px] font-bold uppercase tracking-[0.3em] overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-sm"
+                  className="relative w-full bg-night text-white py-4 sm:py-5 text-[10px] font-bold uppercase tracking-[0.3em] overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-full cursor-pointer shadow-lg"
                 >
                   <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
                   

@@ -117,7 +117,7 @@ export default function AvailabilityCalendar({
   }, [mode, selected]);
 
   return (
-    <div className="w-full bg-[#FAFAF8] border border-ink/10 rounded-sm p-4 sm:p-5 select-none font-sans">
+    <div className="w-full bg-[#FAFAF8] border border-ink/10 rounded-2xl p-3 sm:p-5 select-none font-sans overflow-hidden">
       {/* En-tête calendrier */}
       <div className="flex items-center justify-between pb-3 border-b border-ink/10 mb-3">
         <div className="flex items-center gap-2">
@@ -135,14 +135,14 @@ export default function AvailabilityCalendar({
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 text-[11px] rounded-sm flex items-center gap-2">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 text-[11px] rounded-lg flex items-center gap-2">
           <AlertCircle size={14} className="text-red-600 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Calendrier React Day Picker avec styles Haute Couture */}
-      <div className="flex justify-center rk-calendar-wrapper overflow-x-auto py-1">
+      <div className="flex justify-center rk-calendar-wrapper overflow-x-auto py-1 max-w-full">
         {mode === 'range' ? (
           <DayPicker
             mode="range"

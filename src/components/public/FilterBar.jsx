@@ -1,4 +1,4 @@
-import { MapPin, Home, BedDouble, Wallet, ChevronDown, KeyRound, Tag } from 'lucide-react';
+import { MapPin, Home, BedDouble, Users, ChevronDown, KeyRound, Tag } from 'lucide-react';
 import { TRANSACTION_TYPES, RESIDENCE_STATUSES } from '../../constants/residenceConstants';
 
 export default function FilterBar({ filters, onChange, areaOptions }) {
@@ -7,7 +7,7 @@ export default function FilterBar({ filters, onChange, areaOptions }) {
   };
 
   return (
-    <div className="mb-14 border-y border-neutral-200/60 bg-white/40 backdrop-blur-sm">
+    <div className="mb-14 border border-neutral-200/70 bg-white/70 backdrop-blur-md rounded-2xl overflow-hidden shadow-sm">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 divide-y sm:divide-y-0 sm:divide-x divide-neutral-200/60">
 
         {/* Transaction */}
@@ -94,8 +94,8 @@ export default function FilterBar({ filters, onChange, areaOptions }) {
               className="w-full appearance-none bg-transparent py-1 pr-6 text-xs uppercase tracking-[0.1em] text-night outline-none cursor-pointer"
             >
               <option value="">Tous les types</option>
-              <option value="appartement">Appartement</option>
               <option value="villa">Villa</option>
+              <option value="appartement">Appartement</option>
               <option value="penthouse">Penthouse</option>
             </select>
             <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-night/30" aria-hidden="true" />
@@ -125,24 +125,24 @@ export default function FilterBar({ filters, onChange, areaOptions }) {
           </div>
         </div>
 
-        {/* Budget */}
+        {/* Voyageurs */}
         <div className="relative p-4 md:p-5 transition-colors hover:bg-neutral-50/50">
-          <label htmlFor="filter-budget" className="sr-only">Budget</label>
+          <label htmlFor="filter-guests" className="sr-only">Voyageurs</label>
           <div className="flex items-center gap-2 mb-2">
-            <Wallet size={13} className="text-gold" aria-hidden="true" />
-            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-night/50">Budget</span>
+            <Users size={13} className="text-gold" aria-hidden="true" />
+            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-night/50">Voyageurs</span>
           </div>
           <div className="relative">
             <select
-              id="filter-budget"
-              value={filters.budget}
-              onChange={(e) => handleSelect("budget", e.target.value)}
+              id="filter-guests"
+              value={filters.guests || ""}
+              onChange={(e) => handleSelect("guests", e.target.value)}
               className="w-full appearance-none bg-transparent py-1 pr-6 text-xs uppercase tracking-[0.1em] text-night outline-none cursor-pointer"
             >
-              <option value="">Peu importe</option>
-              <option value="100k">- de 100k FCFA</option>
-              <option value="300k">100k - 300k FCFA</option>
-              <option value="500k">300k+ FCFA</option>
+              <option value="">Toute capacité</option>
+              <option value="2">1 à 2 personnes</option>
+              <option value="4">3 à 4 personnes</option>
+              <option value="6">5 personnes et +</option>
             </select>
             <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-night/30" aria-hidden="true" />
           </div>

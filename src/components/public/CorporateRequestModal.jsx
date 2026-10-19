@@ -53,7 +53,7 @@ export default function CorporateRequestModal({ isOpen, onClose }) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
         {/* Overlay */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -68,13 +68,14 @@ export default function CorporateRequestModal({ isOpen, onClose }) {
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col"
+          className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[92vh] flex flex-col"
         >
           {/* Close button */}
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="absolute top-4 right-4 text-ink-muted hover:text-ink disabled:opacity-50 z-10"
+            className="absolute top-4 right-4 p-2 text-ink-muted hover:text-ink disabled:opacity-50 z-10 cursor-pointer"
+            aria-label="Fermer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -205,7 +206,7 @@ export default function CorporateRequestModal({ isOpen, onClose }) {
               <button
                 type="submit"
                 disabled={isSubmitting || !rgpdConsent}
-                className="w-full bg-night text-white font-medium text-xs tracking-[0.2em] uppercase py-4 rounded-md hover:bg-night-light transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                className="w-full bg-night text-white font-medium text-xs tracking-[0.2em] uppercase py-4 rounded-full hover:bg-royal transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 cursor-pointer shadow-md"
               >
                 {isSubmitting ? 'Transmission en cours...' : 'Solliciter un Account Manager'}
                 {!isSubmitting && <Briefcase className="w-4 h-4" />}

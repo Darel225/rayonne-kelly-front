@@ -128,7 +128,7 @@ export default function Navbar() {
               <Link
                 to="/connexion"
                 state={{ isLogin: false }}
-                className="bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs uppercase tracking-widest px-6 py-2.5 hover:bg-white hover:text-night transition-all duration-500"
+                className="bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs uppercase tracking-widest px-6 py-2.5 rounded-full hover:bg-white hover:text-night transition-all duration-500"
               >
                 Inscription
               </Link>
@@ -147,7 +147,7 @@ export default function Navbar() {
         {/* Mobile toggle */}
         <button
           type="button"
-          className="md:hidden text-white"
+          className="md:hidden text-white p-2 -mr-2 cursor-pointer focus:outline-none"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-expanded={isMenuOpen}
           aria-label="Menu"
@@ -158,7 +158,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-night px-6 py-4 flex flex-col gap-4 border-b border-white/10">
+        <div className="md:hidden bg-night/98 backdrop-blur-xl px-6 py-5 flex flex-col gap-4 border-b border-white/10 shadow-2xl">
           <Link 
             to="/" 
             onClick={(e) => {
@@ -168,36 +168,36 @@ export default function Navbar() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }} 
-            className="text-xs uppercase tracking-[0.2em] text-white/60 hover:text-white"
+            className="text-xs uppercase tracking-[0.2em] text-white/80 hover:text-white py-1.5 transition-colors"
           >
             Accueil
           </Link>
-          <Link to="/collection" onClick={() => setIsMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-white/60 hover:text-white">
+          <Link to="/collection" onClick={() => setIsMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-white/80 hover:text-white py-1.5 transition-colors">
             Nos résidences
           </Link>
           {isAuthenticated && (
-            <Link to={getDashboardRoute()} onClick={() => setIsMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-white/60 hover:text-white">
+            <Link to={getDashboardRoute()} onClick={() => setIsMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-white/80 hover:text-white py-1.5 transition-colors">
               Mon espace
             </Link>
           )}
-          <div className="h-px w-full bg-white/10 my-2"></div>
+          <div className="h-px w-full bg-white/10 my-1"></div>
           
           {!isAuthenticated ? (
-            <>
-              <Link to="/connexion" state={{ isLogin: true }} onClick={() => setIsMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-white/60 hover:text-white">
+            <div className="flex flex-col gap-3 pt-1">
+              <Link to="/connexion" state={{ isLogin: true }} onClick={() => setIsMenuOpen(false)} className="text-xs uppercase tracking-[0.2em] text-white/80 hover:text-white py-2">
                 Connexion
               </Link>
-              <Link to="/connexion" state={{ isLogin: false }} onClick={() => setIsMenuOpen(false)} className="bg-royal hover:bg-royal-dark text-white text-xs uppercase tracking-[0.2em] px-5 py-2.5 rounded-sm transition-colors text-center inline-block">
+              <Link to="/connexion" state={{ isLogin: false }} onClick={() => setIsMenuOpen(false)} className="bg-royal hover:bg-royal-dark text-white text-xs uppercase tracking-[0.2em] px-6 py-3 rounded-full transition-colors text-center inline-block font-semibold shadow-md">
                 Inscription
               </Link>
-            </>
+            </div>
           ) : (
             <button 
               onClick={() => {
                 setIsMenuOpen(false);
                 handleLogout();
               }} 
-              className="text-left text-xs uppercase tracking-[0.2em] text-white/60 hover:text-white"
+              className="text-left text-xs uppercase tracking-[0.2em] text-white/70 hover:text-white py-2"
             >
               Déconnexion
             </button>

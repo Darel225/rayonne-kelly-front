@@ -12,7 +12,7 @@ import { getImageUrl, FALLBACK_IMAGE } from '../../utils/getImageUrl';
 import ResidenceCard from '../../components/public/ResidenceCard';
 
 const PAGE_SIZE = 6;
-const DEFAULT_FILTERS = { location: "", propertyType: "", rooms: "", budget: "", transactionType: "", status: "" };
+const DEFAULT_FILTERS = { location: "", propertyType: "", rooms: "", guests: "", budget: "", transactionType: "", status: "" };
 
 function applyFilters(list, f) {
   return list.filter(r => {
@@ -29,6 +29,11 @@ function applyFilters(list, f) {
       const minRooms = parseInt(f.rooms, 10);
       if (f.rooms === "3" && r.rooms_count < 3) return false;
       if (f.rooms !== "3" && r.rooms_count !== minRooms) return false;
+    }
+
+    if (f.guests) {
+      const minGuests = parseInt(f.guests, 10);
+      if (r.max_guests && r.max_guests < minGuests) return false;
     }
     
     if (f.budget && (r.price_per_night || r.price || r.price_sale)) {
@@ -205,6 +210,7 @@ export default function Collection() {
       location: searchParams.get('location') || "",
       propertyType: searchParams.get('type') || "",
       rooms: searchParams.get('rooms') || "",
+      guests: searchParams.get('guests') || "",
       budget: searchParams.get('budget') || "",
       transactionType: searchParams.get('transaction') || "",
       status: searchParams.get('status') || ""
@@ -354,9 +360,9 @@ export default function Collection() {
               <button
                 key={tab.id}
                 onClick={() => handleFilterChange({ ...filters, transactionType: tab.id })}
-                className={`px-5 py-2.5 text-[10px] sm:text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-300 rounded-sm whitespace-nowrap ${
+                className={`px-5 py-2.5 text-[10px] sm:text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-300 rounded-full whitespace-nowrap cursor-pointer ${
                   isActive
-                    ? 'bg-night text-white shadow-lg'
+                    ? 'bg-royal text-white shadow-md shadow-royal/20 ring-2 ring-royal/20'
                     : 'bg-white/80 hover:bg-white text-ink-muted hover:text-ink border border-neutral-200/80'
                 }`}
               >
@@ -397,7 +403,7 @@ export default function Collection() {
             <p className="text-ink-muted mb-6">Aucune résidence disponible pour le moment.</p>
             <button
               onClick={() => handleFilterChange(DEFAULT_FILTERS)}
-              className="inline-flex border border-gray-300 px-6 py-2.5 text-xs text-ink hover:border-royal hover:text-royal transition-colors rounded-sm focus:outline-none focus:ring-2 focus:ring-royal focus:ring-offset-2"
+              className="inline-flex border border-gray-300 px-6 py-2.5 text-xs text-ink hover:border-royal hover:text-royal transition-colors rounded-full focus:outline-none focus:ring-2 focus:ring-royal focus:ring-offset-2 cursor-pointer"
             >
               Réinitialiser les filtres
             </button>
@@ -448,7 +454,7 @@ export default function Collection() {
                 <button
                   onClick={() => setPage(prev => Math.max(1, prev - 1))}
                   disabled={page === 1}
-                  className="w-8 h-8 flex items-center justify-center border border-gray-200 text-ink text-xs rounded-sm hover:border-gold transition-colors disabled:opacity-50 disabled:hover:border-gray-200"
+                  className="w-9 h-9 flex items-center justify-center border border-gray-200 text-ink text-xs rounded-full hover:border-royal hover:text-royal transition-colors disabled:opacity-40 disabled:hover:border-gray-200 cursor-pointer"
                   aria-label="Page précédente"
                 >
                   <ChevronLeft size={14} />
@@ -457,7 +463,7 @@ export default function Collection() {
                 <button
                   onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={page === totalPages}
-                  className="w-8 h-8 flex items-center justify-center border border-gray-200 text-ink text-xs rounded-sm hover:border-gold transition-colors disabled:opacity-50 disabled:hover:border-gray-200"
+                  className="w-9 h-9 flex items-center justify-center border border-gray-200 text-ink text-xs rounded-full hover:border-royal hover:text-royal transition-colors disabled:opacity-40 disabled:hover:border-gray-200 cursor-pointer"
                   aria-label="Page suivante"
                 >
                   <ChevronRight size={14} />
@@ -476,28 +482,28 @@ export default function Collection() {
         viewport={{ once: true, margin: "-50px" }}
         transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="bg-gradient-to-br from-night via-night to-[#4B6382] rounded-xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl transition-transform duration-700 ease-out hover:scale-[1.02]">
+        <div className="bg-gradient-to-br from-night via-night to-[#4B6382] rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl transition-transform duration-700 ease-out hover:scale-[1.01]">
           <div className="w-full md:w-3/5">
-            <span className="inline-block bg-white/10 border border-white/20 text-white text-[9px] uppercase tracking-widest px-3 py-1.5 rounded-full mb-5">
+            <span className="inline-block bg-white/10 border border-white/20 text-white text-[9px] uppercase tracking-widest px-3 py-1.5 rounded-full mb-5 font-mono">
               • SERVICE SUR-MESURE
             </span>
             <h2 className="font-serif text-2xl md:text-4xl text-white leading-tight mb-4">
               Vous recherchez quelque chose de particulier ?
             </h2>
-            <p className="text-white/70 text-xs max-w-md leading-relaxed">
+            <p className="text-white/75 text-xs max-w-md leading-relaxed">
               Appartement, villa, résidence meublée ou bien destiné à l’investissement : confiez-nous vos critères. Notre équipe vous accompagne dans votre recherche à Abidjan.
             </p>
           </div>
           <div className="w-full md:w-2/5 flex flex-col gap-3">
             <button 
               onClick={() => setIsCustomRequestModalOpen(true)}
-              className="w-full flex items-center justify-center bg-royal px-6 py-3.5 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-royal-dark rounded-md"
+              className="w-full flex items-center justify-center bg-royal px-6 py-3.5 text-[11px] font-bold uppercase tracking-widest text-white transition-colors hover:bg-royal-dark rounded-full shadow-md cursor-pointer"
             >
               CONFIER MA RECHERCHE À RAYONNE KELLY
             </button>
             <a 
-              href="tel:+2250710101052  "
-              className="w-full flex items-center justify-center border border-white/30 px-6 py-3.5 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-white/10 hover:border-white rounded-md"
+              href="tel:+2250710101052"
+              className="w-full flex items-center justify-center border border-white/30 px-6 py-3.5 text-[11px] font-bold uppercase tracking-widest text-white transition-colors hover:bg-white/10 hover:border-white rounded-full"
             >
               <Phone size={14} className="mr-2" aria-hidden="true" />
               LIGNE DIRECTE CONCIERGERIE
@@ -507,13 +513,14 @@ export default function Collection() {
       </motion.div>
 
       {isCustomRequestModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => !isSubmittingCustomRequest && setIsCustomRequestModalOpen(false)}></div>
-          <div className="relative bg-white p-6 md:p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto rounded-xl">
+          <div className="relative bg-white p-5 sm:p-8 max-w-md w-full shadow-2xl max-h-[92vh] overflow-y-auto rounded-2xl">
             <button
               onClick={() => setIsCustomRequestModalOpen(false)}
               disabled={isSubmittingCustomRequest}
-              className="absolute top-4 right-4 text-ink-muted hover:text-ink disabled:opacity-50"
+              className="absolute top-4 right-4 p-2 text-ink-muted hover:text-ink disabled:opacity-50 cursor-pointer"
+              aria-label="Fermer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -630,7 +637,7 @@ export default function Collection() {
                 <Button
                   type="submit"
                   variant="primary"
-                  className="w-full flex justify-center items-center gap-2"
+                  className="w-full flex justify-center items-center gap-2 rounded-full py-3.5 shadow-md cursor-pointer"
                   disabled={isSubmittingCustomRequest || !customRequestRgpdConsent}
                 >
                   {isSubmittingCustomRequest ? (

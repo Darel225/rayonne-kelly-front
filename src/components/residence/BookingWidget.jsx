@@ -4,11 +4,13 @@ import { Star, MessageCircle, Phone } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import BookingModal from './BookingModal';
 
-export default function BookingWidget({ residence }) {
+export default function BookingWidget({ residence, isModalOpen: externalIsOpen, setIsModalOpen: externalSetIsOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthenticated = useAuthStore(state => !!state.accessToken);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isModalOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsModalOpen = externalSetIsOpen !== undefined ? externalSetIsOpen : setInternalIsOpen;
 
   const txType = residence?.transaction_type || localStorage.getItem(`rk_tx_type_${residence?.id}`) || 'meuble';
   const status = residence?.status || localStorage.getItem(`rk_status_${residence?.id}`) || (residence?.is_active === 0 ? 'reserve' : 'disponible');
@@ -30,7 +32,7 @@ export default function BookingWidget({ residence }) {
         : location.pathname;
       navigate(newUrl, { replace: true });
     }
-  }, [location.search, location.pathname, isAuthenticated, isAvailable, navigate]);
+  }, [location.search, location.pathname, isAuthenticated, isAvailable, navigate, setIsModalOpen]);
 
   const handleBookingClick = () => {
     if (!isAvailable) return;
@@ -44,7 +46,7 @@ export default function BookingWidget({ residence }) {
 
   return (
     <>
-      <div className="sticky top-32 self-start bg-royal text-white shadow-2xl p-10 rounded-sm relative overflow-hidden group">
+      <div className="sticky top-32 self-start bg-royal text-white shadow-2xl p-8 md:p-10 rounded-2xl relative overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
         <div className="relative z-10">
@@ -55,7 +57,7 @@ export default function BookingWidget({ residence }) {
           <h3 className="font-serif text-2xl font-light tracking-wide text-white mb-3">
             {txType === 'vente' ? 'Acquérir ce bien de prestige' : isPriceMasked ? 'Demander un devis' : 'Intéressé par ce bien ?'}
           </h3>
-          <p className="text-xs text-white/80 font-medium tracking-wide mb-8">
+          <p className="text-xs text-white/85 font-medium tracking-wide mb-8">
             {status === 'vendu'
               ? 'Ce bien a trouvé preneur et n\'est plus disponible à l\'achat.'
               : status === 'loue'
@@ -67,19 +69,19 @@ export default function BookingWidget({ residence }) {
               : txType === 'location'
               ? '✓ Bail résidentiel • Garanties d\'usage'
               : isPriceMasked
-              ? '✓ Tarif sur devis • Proposition chiffrée selon vos dates et exigences'
+              ? '✓ Tarif sur devis • Proposition personnalisée sous 24h'
               : '✓ Formule tout inclus • Tarifs ajustables selon la durée'}
           </p>
 
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {status === 'vendu' ? (
               <a
                 href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=Bonjour, j'ai vu la résidence ${residence?.name} (Réf: ${residence?.reference}) marquée comme vendue. Avez-vous un bien similaire disponible ?`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center bg-black/60 border border-gold/70 text-gold px-6 py-4 text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-gold hover:text-night transition-colors gap-2"
+                className="w-full flex items-center justify-center bg-black/60 border border-gold/70 text-gold px-6 py-3.5 text-xs font-semibold uppercase tracking-wider rounded-full hover:bg-gold hover:text-night transition-colors gap-2"
               >
-                <MessageCircle size={14} />
+                <MessageCircle size={15} />
                 Demander un bien similaire
               </a>
             ) : status === 'loue' ? (
@@ -87,16 +89,16 @@ export default function BookingWidget({ residence }) {
                 href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=Bonjour, j'ai vu que la résidence ${residence?.name} (Réf: ${residence?.reference}) est actuellement louée. Quand sera-t-elle disponible ou avez-vous un bien similaire ?`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center bg-white/10 border border-white/30 text-white px-6 py-4 text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-white hover:text-royal transition-colors gap-2"
+                className="w-full flex items-center justify-center bg-white/10 border border-white/30 text-white px-6 py-3.5 text-xs font-semibold uppercase tracking-wider rounded-full hover:bg-white hover:text-royal transition-colors gap-2"
               >
-                <MessageCircle size={14} />
+                <MessageCircle size={15} />
                 Se renseigner sur la disponibilité
               </a>
             ) : status === 'reserve' ? (
               <button 
                 type="button"
                 onClick={handleBookingClick}
-                className="w-full flex items-center justify-center bg-amber-400 text-night px-6 py-4 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 hover:bg-white rounded-sm"
+                className="w-full flex items-center justify-center bg-amber-400 text-night px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all duration-300 hover:bg-white rounded-full cursor-pointer"
               >
                 Option en cours &bull; Se renseigner
               </button>
@@ -104,7 +106,7 @@ export default function BookingWidget({ residence }) {
               <button 
                 type="button"
                 onClick={handleBookingClick}
-                className="w-full flex items-center justify-center bg-gold px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-night transition-all duration-300 hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-sm font-semibold"
+                className="w-full flex items-center justify-center bg-gold px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-night transition-all duration-300 hover:bg-white hover:shadow-lg rounded-full cursor-pointer"
               >
                 Planifier une visite privée
               </button>
@@ -112,7 +114,7 @@ export default function BookingWidget({ residence }) {
               <button 
                 type="button"
                 onClick={handleBookingClick}
-                className="w-full flex items-center justify-center bg-white px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-royal transition-all duration-300 hover:bg-gray-100 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-sm font-semibold"
+                className="w-full flex items-center justify-center bg-white px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-royal transition-all duration-300 hover:bg-gray-100 hover:shadow-lg rounded-full cursor-pointer"
               >
                 Demande de location &bull; Visite
               </button>
@@ -120,7 +122,7 @@ export default function BookingWidget({ residence }) {
               <button 
                 type="button" 
                 onClick={handleBookingClick}
-                className="w-full flex items-center justify-center bg-gold px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-night transition-all duration-300 hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-sm font-semibold"
+                className="w-full flex items-center justify-center bg-gold px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-night transition-all duration-300 hover:bg-white hover:shadow-lg rounded-full cursor-pointer"
               >
                 Demander un devis personnalisé
               </button>
@@ -128,7 +130,7 @@ export default function BookingWidget({ residence }) {
               <button 
                 type="button" 
                 onClick={handleBookingClick}
-                className="w-full flex items-center justify-center bg-white px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-royal transition-all duration-300 hover:bg-gray-100 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-sm"
+                className="w-full flex items-center justify-center bg-white px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-royal transition-all duration-300 hover:bg-gray-100 hover:shadow-lg rounded-full cursor-pointer"
               >
                 Vérifier la disponibilité • Réserver
               </button>
@@ -142,7 +144,7 @@ export default function BookingWidget({ residence }) {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center bg-[#25D366] px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-white transition-all duration-300 hover:bg-[#128C7E] hover:shadow-[0_0_20px_rgba(37,211,102,0.4)] rounded-sm gap-3"
+              className="w-full flex items-center justify-center bg-[#25D366] px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-white transition-all duration-300 hover:bg-[#128C7E] hover:shadow-lg rounded-full gap-2.5"
             >
               <MessageCircle size={16} />
               {isPriceMasked ? 'Devis via WhatsApp' : 'Échanger sur WhatsApp'}
@@ -150,7 +152,7 @@ export default function BookingWidget({ residence }) {
 
             <a
               href={`tel:+${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}`}
-              className="w-full flex items-center justify-center border border-white/40 text-white px-6 py-4 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 hover:bg-white hover:text-royal rounded-sm gap-3"
+              className="w-full flex items-center justify-center border border-white/40 text-white px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all duration-300 hover:bg-white hover:text-royal rounded-full gap-2.5"
             >
               <Phone size={14} />
               Appeler Rayonne Kelly

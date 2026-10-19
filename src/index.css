@@ -22,12 +22,16 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
   body {
     background-color: var(--color-ivory);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
   body,
   p, h1, h2, h3, h4, h5, h6,
@@ -195,5 +199,22 @@
 
 .rk-day-picker .rdp-today .rdp-day_button {
   border-bottom: 2px solid var(--color-gold);
+}
+
+@media (max-width: 400px) {
+  .rk-day-picker .rdp-weekday {
+    width: 1.85rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.05em;
+  }
+  .rk-day-picker .rdp-day {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+  .rk-day-picker .rdp-day_button {
+    width: 1.8rem;
+    height: 1.8rem;
+    font-size: 0.75rem;
+  }
 }
 

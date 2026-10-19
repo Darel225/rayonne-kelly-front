@@ -9,6 +9,7 @@ import BookingWidget from '../../components/residence/BookingWidget';
 import RestaurantMenu from '../../components/residence/RestaurantMenu';
 
 import { getAmenityIcon } from '../../utils/iconMap';
+import useAuthStore from '../../store/authStore';
 
 function getIconComponent(amenity) {
   // Nouveau système : L'icône est renseignée depuis le back-office
@@ -56,7 +57,8 @@ export default function ResidenceDetails() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notFound, setNotFound] = useState(false);
-
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const isAuthenticated = useAuthStore(state => !!state.accessToken);
 
   // États pour la Lightbox
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -224,6 +226,37 @@ export default function ResidenceDetails() {
   const priceDisplay = residence?.price_display || localStorage.getItem(`rk_price_display_${residence?.id}`) || (residence?.is_price_displayed !== undefined ? (residence?.is_price_displayed ? 'public' : 'on_demand') : (rawPrice ? 'public' : 'on_demand'));
   const isPriceMasked = priceDisplay === 'on_demand' || !rawPrice;
 
+  // Détection automatique de l'atout prestige majeur
+  const getPrestigeHighlight = () => {
+    if (residence?.highlight) {
+      const hl = residence.highlight.toLowerCase();
+      if (hl.includes('piscine') || hl.includes('pool')) return { icon: '🏊‍♂️', text: residence.highlight };
+      if (hl.includes('lagune') || hl.includes('vue')) return { icon: '🌅', text: residence.highlight };
+      return { icon: '✨', text: residence.highlight };
+    }
+    if (Array.isArray(residence?.amenities)) {
+      const hasPool = residence.amenities.some(a => {
+        const str = (typeof a === 'string' ? a : a.name || a.label || a.id || '').toLowerCase();
+        return str.includes('pool') || str.includes('piscine');
+      });
+      if (hasPool) return { icon: '🏊‍♂️', text: 'Piscine privée' };
+
+      const hasLagoon = residence.amenities.some(a => {
+        const str = (typeof a === 'string' ? a : a.name || a.label || a.id || '').toLowerCase();
+        return str.includes('lagoon') || str.includes('lagune') || str.includes('vue');
+      });
+      if (hasLagoon) return { icon: '🌅', text: 'Vue Lagune' };
+    }
+    const textToCheck = `${residence?.name || ''} ${residence?.description || ''} ${residence?.property_type || ''}`.toLowerCase();
+    if (textToCheck.includes('piscine') || textToCheck.includes('pool')) return { icon: '🏊‍♂️', text: 'Piscine privée' };
+    if (textToCheck.includes('lagune')) return { icon: '🌅', text: 'Vue Lagune' };
+    if (textToCheck.includes('penthouse')) return { icon: '🏙️', text: 'Penthouse de prestige' };
+    if (textToCheck.includes('jardin')) return { icon: '🌿', text: 'Jardin tropical' };
+    return null;
+  };
+
+  const prestigeBadge = getPrestigeHighlight();
+
   return (
     <main className="pt-32 pb-24 min-h-screen bg-mist">
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-7xl mx-auto px-6">
@@ -254,27 +287,35 @@ export default function ResidenceDetails() {
 
                   {/* Macaron de Statut Commercial & Type de Transaction */}
                   {status === 'vendu' ? (
-                    <div className="absolute top-6 left-6 z-10 bg-night/95 backdrop-blur-md border border-gold/70 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-gold rounded-sm shadow-xl flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
+                    <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 bg-night/95 backdrop-blur-md border border-gold/70 px-3.5 sm:px-4 py-1.5 sm:py-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] text-gold rounded-full shadow-xl flex items-center gap-2">
+                      <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-gold animate-pulse" />
                       DÉJÀ VENDU
                     </div>
                   ) : status === 'loue' ? (
-                    <div className="absolute top-6 left-6 z-10 bg-night/90 backdrop-blur-md border border-white/20 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/90 rounded-sm shadow-md">
+                    <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 bg-night/90 backdrop-blur-md border border-white/20 px-3.5 sm:px-4 py-1.5 sm:py-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-white/90 rounded-full shadow-md">
                       DÉJÀ LOUÉ
                     </div>
                   ) : status === 'reserve' ? (
-                    <div className="absolute top-6 left-6 z-10 bg-amber-950/90 backdrop-blur-md border border-amber-400/50 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-200 rounded-sm shadow-md">
+                    <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 bg-amber-950/90 backdrop-blur-md border border-amber-400/50 px-3.5 sm:px-4 py-1.5 sm:py-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-amber-200 rounded-full shadow-md">
                       RÉSERVÉ
                     </div>
                   ) : txType === 'vente' ? (
-                    <div className="absolute top-6 left-6 z-10 bg-gold text-night px-3.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] rounded-sm shadow-md font-mono">
+                    <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 bg-gold text-night px-3.5 sm:px-4 py-1.5 sm:py-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] rounded-full shadow-md font-mono">
                       Acquisition &bull; Vente
                     </div>
                   ) : txType === 'location' ? (
-                    <div className="absolute top-6 left-6 z-10 bg-white/95 text-night px-3.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] rounded-sm shadow-md font-mono">
+                    <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 bg-white/95 text-night px-3.5 sm:px-4 py-1.5 sm:py-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] rounded-full shadow-md font-mono">
                       Location Longue Durée
                     </div>
                   ) : null}
+
+                  {/* Badge Atout Prestige (Piscine, Vue Lagune, Penthouse) */}
+                  {prestigeBadge && (
+                    <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-10 bg-night/85 backdrop-blur-md border border-white/20 px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium tracking-wide text-white rounded-full shadow-lg flex items-center gap-1.5 sm:gap-2 pointer-events-none">
+                      <span>{prestigeBadge.icon}</span>
+                      <span className="font-sans font-medium">{prestigeBadge.text}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Small images wrapper */}
@@ -307,9 +348,9 @@ export default function ResidenceDetails() {
               {/* Bouton afficher tout */}
               <button
                 onClick={() => openGallery(0)}
-                className="absolute bottom-6 right-6 bg-white hover:bg-gray-50 text-ink px-4 py-2 text-sm font-semibold rounded-lg shadow-md flex items-center gap-2 transition-colors z-10"
+                className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 bg-white/95 hover:bg-white text-ink px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-full shadow-md flex items-center gap-1.5 sm:gap-2 transition-colors z-10 cursor-pointer"
               >
-                <Images size={16} />
+                <Images size={15} />
                 Afficher toutes les photos
               </button>
             </div>
@@ -387,7 +428,7 @@ export default function ResidenceDetails() {
               <motion.div variants={itemVariants} className="font-mono text-[9px] uppercase tracking-[0.3em] text-gold mb-3">02 / LE DOMAINE</motion.div>
               <motion.h2 variants={itemVariants} className="font-serif text-xl font-light tracking-wide text-night mb-5">Équipements & Prestations</motion.h2>
               <motion.p variants={itemVariants} className="font-serif text-[15px] font-light leading-relaxed tracking-wide text-ink/80 mb-8">
-                Une infrastructure technique et hôtelière invisible répondant aux exigences des délégations officielles, hauts dignitaires et familles esthètes.
+                Une sélection exigeante d'équipements et de prestations haut de gamme, pensée pour vous garantir un séjour serein, intime et d'un confort absolu.
               </motion.p>
 
               {rawAmenities.length === 0 ? (
@@ -429,7 +470,7 @@ export default function ResidenceDetails() {
               <motion.div variants={itemVariants} className="font-mono text-[9px] uppercase tracking-[0.3em] text-gold mb-3">04 / EMPLACEMENT</motion.div>
               <motion.h2 variants={itemVariants} className="font-serif text-xl font-light tracking-wide text-night mb-5">{residence.district}</motion.h2>
               <motion.p variants={itemVariants} className="font-serif text-[15px] font-light leading-relaxed tracking-wide text-ink/80 mb-8">
-                L'adresse cadastrale exacte est exclusivement communiquée à l'hôte lors de la validation diplomatique de la réservation, afin de garantir l'anonymat et l'intimité inviolable du séjour.
+                L'adresse exacte de la résidence vous est communiquée dès la confirmation de votre réservation, afin de préserver la totale discrétion et l'intimité de votre séjour.
               </motion.p>
               <motion.div variants={itemVariants} className="relative w-full h-80 bg-[#FAFAF8] rounded-sm flex items-center justify-center overflow-hidden border border-black/5 group cursor-default">
                 {/* Image de fond topographique abstraite (très douce/luxe) */}
@@ -462,7 +503,11 @@ export default function ResidenceDetails() {
 
           {/* Right Column: Sticky Reservation Panel */}
           <motion.div variants={itemVariants} className="lg:col-span-1 hidden lg:block">
-            <BookingWidget residence={residence} />
+            <BookingWidget 
+              residence={residence} 
+              isModalOpen={isBookingModalOpen} 
+              setIsModalOpen={setIsBookingModalOpen} 
+            />
           </motion.div>
 
         </div>
@@ -522,39 +567,86 @@ export default function ResidenceDetails() {
         </div>
       )}
 
-      {/* Barre Fixe de Conversion (Mobile) */}
-      <div className="block lg:hidden fixed bottom-0 left-0 w-full z-50 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-        {status === 'vendu' ? (
-          <a
-            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=Bonjour, j'ai vu la résidence ${residence.name} (Réf: ${residence.reference}) marquée comme vendue. Avez-vous un bien similaire disponible ?`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-center bg-night border border-gold/70 text-gold px-6 py-4 text-xs font-semibold uppercase tracking-widest rounded-sm gap-2"
-          >
-            <MessageCircle size={16} />
-            Demander un bien similaire
-          </a>
-        ) : status === 'loue' ? (
-          <a
-            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=Bonjour, j'ai vu que la résidence ${residence.name} (Réf: ${residence.reference}) est actuellement louée. Quand sera-t-elle disponible ou avez-vous un bien similaire ?`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-center bg-night border border-white/30 text-white px-6 py-4 text-xs font-semibold uppercase tracking-widest rounded-sm gap-2"
-          >
-            <MessageCircle size={16} />
-            Se renseigner sur la disponibilité
-          </a>
-        ) : (
-          <a
-            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=Bonjour, je souhaite me renseigner sur la résidence ${residence.name} (Réf: ${residence.reference})`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-center bg-[#25D366] px-6 py-4 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-[#128C7E] rounded-sm gap-2"
-          >
-            <MessageCircle size={16} />
-            {txType === 'vente' ? 'Échanger sur WhatsApp' : 'Réserver sur WhatsApp'}
-          </a>
-        )}
+      {/* Barre Fixe de Conversion (Mobile — Style onefinestay / Plum Guide) */}
+      <div className="block lg:hidden fixed bottom-0 left-0 w-full z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-5 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+          {/* Prix à gauche */}
+          <div className="flex flex-col">
+            {!isPriceMasked && rawPrice ? (
+              <>
+                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">À partir de</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-serif text-lg font-bold text-night">
+                    {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(rawPrice)}
+                  </span>
+                  <span className="text-[10px] text-gray-500 font-medium">FCFA {txType === 'vente' ? '' : txType === 'location' ? '/m' : '/nuit'}</span>
+                </div>
+              </>
+            ) : (
+              <span className="font-serif text-sm font-semibold text-gold-dark">
+                Tarif sur demande
+              </span>
+            )}
+          </div>
+
+          {/* Boutons d'action à droite */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* WhatsApp direct */}
+            <a
+              href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2250710101052'}?text=${encodeURIComponent(
+                isPriceMasked
+                  ? `Bonjour Rayonne Kelly, je souhaite obtenir un devis personnalisé pour la résidence ${residence?.name} (Réf: ${residence?.reference}). Pouvez-vous me communiquer vos disponibilités et proposition tarifaire ?`
+                  : `Bonjour Rayonne Kelly, je souhaite me renseigner sur la résidence ${residence?.name} (Réf: ${residence?.reference})`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-full shadow-sm transition-colors flex items-center justify-center shrink-0"
+              aria-label="Contacter sur WhatsApp"
+            >
+              <MessageCircle size={18} />
+            </a>
+
+            {/* Bouton de réservation principale */}
+            {status === 'vendu' ? (
+              <span className="bg-gray-100 text-gray-400 px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider rounded-full">
+                Vendu
+              </span>
+            ) : status === 'loue' ? (
+              <span className="bg-gray-100 text-gray-400 px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider rounded-full">
+                Loué
+              </span>
+            ) : status === 'reserve' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate(`/connexion?redirect=${encodeURIComponent(window.location.pathname + '?action=booking')}`);
+                  } else {
+                    setIsBookingModalOpen(true);
+                  }
+                }}
+                className="bg-amber-400 text-night px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-sm transition-colors"
+              >
+                Consulter
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isAvailable) return;
+                  if (!isAuthenticated) {
+                    navigate(`/connexion?redirect=${encodeURIComponent(window.location.pathname + '?action=booking')}`);
+                  } else {
+                    setIsBookingModalOpen(true);
+                  }
+                }}
+                className="bg-royal hover:bg-royal-dark text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-md transition-colors"
+              >
+                {txType === 'vente' ? 'Visiter' : isPriceMasked ? 'Devis' : 'Réserver'}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
     </main>
