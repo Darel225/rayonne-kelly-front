@@ -218,3 +218,404 @@
   }
 }
 
+/* =========================================================================
+   Rayonne Kelly — Cinematic VIP Brand Intro (Aviation & Prestige)
+   ========================================================================= */
+.rk-intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0B1426;
+  overflow: hidden;
+  user-select: none;
+  transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.3s ease;
+  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
+}
+
+.rk-intro-lift {
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+.rk-intro-skip-fade {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Ambient glow & celestial depth */
+.rk-intro-ambient-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 65% 45%, rgba(201, 169, 110, 0.18) 0%, rgba(35, 80, 224, 0.1) 40%, transparent 75%);
+  pointer-events: none;
+  animation: rkGlowPulse 4s ease-in-out infinite alternate;
+}
+
+.rk-intro-stars-layer {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 120px 80px, #C9A96E, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 240px 180px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 450px 90px, #E8D9B5, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 680px 140px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 890px 220px, #C9A96E, rgba(0,0,0,0));
+  background-size: 550px 550px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Animation Stage */
+.rk-intro-stage {
+  position: relative;
+  width: min(92vw, 860px);
+  aspect-ratio: 1000 / 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rk-intro-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Flight Path & Trail */
+.rk-intro-trail-reveal {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: rkTrailDraw 1.15s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+}
+
+.rk-intro-trail-path {
+  filter: drop-shadow(0 0 4px rgba(201, 169, 110, 0.6));
+}
+
+/* Coordinates in the sky */
+.rk-intro-geo-text {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  fill: rgba(201, 169, 110, 0.7);
+  animation: rkFadeInDown 0.8s ease-out 0.1s both;
+}
+
+/* Jet Flight & Fadeout */
+.rk-intro-jet-group {
+  animation: rkJetFadeOut 0.4s ease-out 1.35s forwards;
+}
+
+.rk-intro-jet-body {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.7));
+}
+
+/* Ripple shockwaves on Abidjan touchdown */
+.rk-intro-ripple-1,
+.rk-intro-ripple-2 {
+  fill: none;
+  stroke: #C9A96E;
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+}
+
+.rk-intro-ripple-1 {
+  animation: rkRipplePulse 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) 1.32s forwards;
+}
+
+.rk-intro-ripple-2 {
+  stroke: #E8D9B5;
+  animation: rkRipplePulse 1.1s cubic-bezier(0.1, 0.8, 0.3, 1) 1.48s forwards;
+}
+
+/* Destination Pin */
+.rk-intro-pin-group {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  opacity: 0;
+  animation: rkPinDrop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 1.25s forwards;
+}
+
+.rk-intro-pin-shape {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
+}
+
+.rk-intro-city-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  fill: #FFFFFF;
+}
+
+/* Flight Phase Layer: fades out cleanly as the brand reveal takes center stage */
+.rk-intro-flight-layer {
+  animation: rkFlightLayerFadeOut 0.45s ease-out 1.6s forwards;
+}
+
+@keyframes rkFlightLayerFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Brand Medallion & Title Reveal (Phase 3) */
+.rk-intro-brand-reveal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  animation: rkBrandReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) 1.75s forwards;
+}
+
+.rk-intro-medallion-container {
+  position: relative;
+  margin-bottom: 1.25rem;
+}
+
+.rk-intro-medallion-halo {
+  position: absolute;
+  inset: -16px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(201, 169, 110, 0.45) 0%, rgba(201, 169, 110, 0) 70%);
+  animation: rkHaloPulse 2s ease-in-out infinite alternate;
+}
+
+.rk-intro-medallion {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 9999px;
+  background: #FFFFFF;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #C9A96E;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(201, 169, 110, 0.4);
+}
+
+@media (min-width: 640px) {
+  .rk-intro-medallion {
+    width: 6rem;
+    height: 6rem;
+  }
+}
+
+.rk-intro-text-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 90vw;
+}
+
+.rk-intro-gold-line {
+  width: 4rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #C9A96E, transparent);
+  margin-bottom: 0.75rem;
+  transform: scaleX(0);
+  animation: rkLineExpand 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1.85s forwards;
+}
+
+.rk-intro-title {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  color: #FFFFFF;
+  margin: 0;
+  background: linear-gradient(135deg, #FFFFFF 20%, #FFF2D6 50%, #C9A96E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+}
+
+@media (min-width: 640px) {
+  .rk-intro-title {
+    font-size: 2.4rem;
+  }
+}
+
+.rk-intro-subtitle {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: #E8D9B5;
+  margin-top: 0.5rem;
+  opacity: 0.9;
+  text-transform: uppercase;
+}
+
+@media (min-width: 640px) {
+  .rk-intro-subtitle {
+    font-size: 0.8rem;
+    letter-spacing: 0.26em;
+  }
+}
+
+.rk-intro-city-tag {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.65rem;
+  text-transform: uppercase;
+}
+
+/* Skip Intro VIP Pill */
+.rk-intro-skip-btn {
+  position: absolute;
+  right: 1.25rem;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  background: rgba(11, 20, 38, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(201, 169, 110, 0.4);
+  color: #E8D9B5;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.rk-intro-skip-btn:hover {
+  background: rgba(201, 169, 110, 0.2);
+  border-color: #C9A96E;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+/* Keyframes */
+@keyframes rkTrailDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes rkJetFadeOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+}
+
+@keyframes rkPinDrop {
+  0% {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1.15, 0.85);
+  }
+  80% {
+    transform: translateY(-7px) scale(0.95, 1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+@keyframes rkRipplePulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  25% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(5.5);
+  }
+}
+
+@keyframes rkBrandReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes rkHaloPulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes rkLineExpand {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes rkGlowPulse {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes rkFadeInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
