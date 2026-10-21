@@ -82,9 +82,9 @@ function StandardCard({ r }) {
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 id={`c-${r.id || r.slug}-title`} className="font-serif text-xl text-ink mb-1 text-safe">{r.name}</h2>
+            <h2 id={`c-${r.id || r.slug}-title`} className="font-serif text-xl text-ink mb-1 text-safe">{(r.name || '').replace(/Macory/gi, 'Marcory')}</h2>
             <div className="text-[10px] uppercase tracking-[0.25em] text-gold">
-              {r.district} • RÉF. {r.reference}
+              {(r.district && r.district.toLowerCase() !== 'abidjan' ? r.district : 'Marcory Zone 4').replace(/Macory/gi, 'Marcory')} • RÉF. {r.reference}
             </div>
           </div>
           {/* Prix masqué - Positionnement Premium
@@ -141,10 +141,10 @@ function DarkCard({ r }) {
       >
         <div className="text-[10px] uppercase tracking-[0.25em] text-gold">
           <span className="mr-3 inline-block h-px w-6 bg-white/40 align-middle" />
-          {r.district} • RÉF. {r.reference}
+          {(r.district && r.district.toLowerCase() !== 'abidjan' ? r.district : 'Marcory Zone 4').replace(/Macory/gi, 'Marcory')} • RÉF. {r.reference}
         </div>
         <h2 id={`c-${r.id || r.slug}-title`} className="font-serif text-3xl md:text-4xl text-white text-safe">
-          {r.name}
+          {(r.name || '').replace(/Macory/gi, 'Marcory')}
         </h2>
         <p className="text-xs leading-relaxed text-white/60 line-clamp-3 text-safe">
           {r.description}

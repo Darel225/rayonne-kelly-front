@@ -70,11 +70,12 @@ export default function ResidenceCard({ residence, index }) {
 
   // Traitement Localisation
   const formatLocation = () => {
-    const dist = (residence.location || residence.district || '').trim();
+    let raw = (residence.address || residence.location || residence.district || '').trim();
+    raw = raw.replace(/Macory/gi, 'Marcory');
     const cty = (residence.city || 'Abidjan').trim();
-    if (!dist) return cty;
-    if (dist.toLowerCase() === cty.toLowerCase()) return cty;
-    return `${dist}, ${cty}`;
+    if (!raw || raw.toLowerCase() === cty.toLowerCase()) return `Marcory Zone 4, ${cty}`;
+    if (!raw.toLowerCase().includes(cty.toLowerCase())) return `${raw}, ${cty}`;
+    return raw;
   };
 
   const rawPrice = residence.pricePerNight || residence.price_per_night || residence.price || residence.price_sale;
@@ -237,13 +238,13 @@ export default function ResidenceCard({ residence, index }) {
 
           {/* Ligne 1 : Titre */}
           <h3 className="font-serif text-2xl font-light text-night line-clamp-1 mb-2">
-            {residence.title || residence.name}
+            {(residence.title || residence.name || '').replace(/Macory/gi, 'Marcory')}
           </h3>
 
           {/* Ligne 2 : Localisation Précise avec Adresse */}
           <div className="flex items-center gap-1.5 text-xs text-ink/70 mb-1">
             <MapPin size={12} className="text-gold shrink-0" />
-            <span className="line-clamp-1">{residence.address || formatLocation()}</span>
+            <span className="line-clamp-1">{formatLocation()}</span>
           </div>
 
           {/* Ligne 3 : Caractéristiques détaillées */}

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, ZoomIn, Images, AlertCircle, Check, Shield, Wifi, Tv, Coffee, Droplets, Wind, Lock, Battery, Thermometer, Zap, Key, Star, ShieldCheck, X, ChevronLeft, ChevronRight, MessageCircle, Phone } from 'lucide-react';
+import { MapPin, ZoomIn, Images, AlertCircle, Check, Shield, Wifi, Tv, Coffee, Droplets, Wind, Lock, Battery, Thermometer, Zap, Key, Star, ShieldCheck, X, ChevronLeft, ChevronRight, MessageCircle, Phone, ExternalLink } from 'lucide-react';
 import Button from '../../components/common/Button';
 import api from '../../services/api';
 import { getImageUrl, FALLBACK_IMAGE } from '../../utils/getImageUrl';
 import BookingWidget from '../../components/residence/BookingWidget';
 import RestaurantMenu from '../../components/residence/RestaurantMenu';
+import NeighborhoodItineraryMap from '../../components/residence/NeighborhoodItineraryMap';
 
 import { getAmenityIcon } from '../../utils/iconMap';
 import useAuthStore from '../../store/authStore';
@@ -226,6 +227,19 @@ export default function ResidenceDetails() {
   const priceDisplay = residence?.price_display || localStorage.getItem(`rk_price_display_${residence?.id}`) || (residence?.is_price_displayed !== undefined ? (residence?.is_price_displayed ? 'public' : 'on_demand') : (rawPrice ? 'public' : 'on_demand'));
   const isPriceMasked = priceDisplay === 'on_demand' || !rawPrice;
 
+  // Formatage chirurgical de la localisation & Google Maps
+  const rawDist = (residence?.district || residence?.location || '').trim().replace(/Macory/gi, 'Marcory');
+  const rawAddr = (residence?.address || '').trim().replace(/Macory/gi, 'Marcory');
+  const city = (residence?.city || 'Abidjan').trim();
+
+  const district = (!rawDist || rawDist.toLowerCase() === 'abidjan') ? 'Marcory Zone 4' : rawDist;
+  const fullAddress = rawAddr 
+    ? (rawAddr.toLowerCase().includes(city.toLowerCase()) ? rawAddr : `${rawAddr}, ${city}`)
+    : `${district}, ${city}`;
+  const mapSearchQuery = encodeURIComponent(`${fullAddress}, Côte d'Ivoire`);
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapSearchQuery}`;
+  const embedMapsUrl = `https://maps.google.com/maps?q=${mapSearchQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+
   // Détection automatique de l'atout prestige majeur
   const getPrestigeHighlight = () => {
     if (residence?.highlight) {
@@ -361,7 +375,7 @@ export default function ResidenceDetails() {
         <div className="mb-10">
           <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div className="font-mono text-[10px] uppercase tracking-widest text-gold font-medium">
-              ● {residence.district} • RÉF. {residence.reference}
+              ● {district} • RÉF. {residence.reference}
             </div>
             <nav aria-label="Fil d'Ariane">
               <ol className="flex items-center gap-2 text-[10px] uppercase text-ink-muted">
@@ -369,7 +383,7 @@ export default function ResidenceDetails() {
                 <li>/</li>
                 <li><Link to="/collection" className="hover:text-ink transition-colors">NOS RÉSIDENCES</Link></li>
                 <li>/</li>
-                <li><Link to="/collection" className="hover:text-ink transition-colors">{residence.district}</Link></li>
+                <li><Link to="/collection" className="hover:text-ink transition-colors">{district}</Link></li>
                 <li>/</li>
                 <li className="text-ink font-bold" aria-current="page">{residence.name}</li>
               </ol>
@@ -381,7 +395,7 @@ export default function ResidenceDetails() {
             </motion.h1>
             <motion.p variants={itemVariants} className="font-serif italic font-light text-ink-muted text-lg flex items-center gap-2 mb-4">
               <MapPin size={18} className="text-gold" />
-              {residence.address ? `${residence.address}, ` : ''}{residence.district}
+              {fullAddress}
             </motion.p>
             {!isPriceMasked && rawPrice ? (
               <motion.div variants={itemVariants} className="font-serif text-xl md:text-2xl font-light tracking-wider text-night mt-4 flex items-baseline gap-2">
@@ -468,34 +482,43 @@ export default function ResidenceDetails() {
             {/* Section Emplacement */}
             <section className="border-t border-black/5 pt-10">
               <motion.div variants={itemVariants} className="font-mono text-[9px] uppercase tracking-[0.3em] text-gold mb-3">04 / EMPLACEMENT</motion.div>
-              <motion.h2 variants={itemVariants} className="font-serif text-xl font-light tracking-wide text-night mb-5">{residence.district}</motion.h2>
-              <motion.p variants={itemVariants} className="font-serif text-[15px] font-light leading-relaxed tracking-wide text-ink/80 mb-8">
-                L'adresse exacte de la résidence vous est communiquée dès la confirmation de votre réservation, afin de préserver la totale discrétion et l'intimité de votre séjour.
-              </motion.p>
-              <motion.div variants={itemVariants} className="relative w-full h-80 bg-[#FAFAF8] rounded-sm flex items-center justify-center overflow-hidden border border-black/5 group cursor-default">
-                {/* Image de fond topographique abstraite (très douce/luxe) */}
-                <div
-                  className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
-                  style={{ filter: 'grayscale(100%) opacity(20%) sepia(30%) hue-rotate(5deg)' }}
-                  aria-hidden="true"
-                ></div>
-
-                {/* Overlay pour lisser et donner cet aspect papier/ivoire luxueux */}
-                <div className="absolute inset-0 bg-white/40"></div>
-
-                <div className="relative z-10 flex flex-col items-center">
-                  {/* Marqueur doré de prestige */}
-                  <div className="relative flex h-12 w-12 items-center justify-center mb-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C9A96E] opacity-30"></span>
-                    <span className="relative inline-flex rounded-full h-4 w-4 bg-[#C9A96E] border-2 border-white shadow-lg"></span>
-                  </div>
-
-                  {/* Badge de localisation */}
-                  <div className="bg-white/90 backdrop-blur-md text-ink text-[10px] font-semibold tracking-[0.2em] uppercase px-6 py-3 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-black/5 text-center flex items-center gap-2">
-                    <MapPin size={12} className="text-gold" />
-                    {residence.district}
-                  </div>
+              
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
+                <div>
+                  <motion.h2 variants={itemVariants} className="font-serif text-2xl font-light tracking-wide text-night">
+                    {district}, {city}
+                  </motion.h2>
+                  <motion.p variants={itemVariants} className="text-xs font-mono uppercase tracking-widest text-gold mt-1 flex items-center gap-1.5">
+                    <MapPin size={13} className="text-gold shrink-0" />
+                    <span>{fullAddress}</span>
+                  </motion.p>
                 </div>
+
+                {/* Bouton direct d'ouverture Google Maps */}
+                <motion.a 
+                  variants={itemVariants}
+                  href={googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-night text-gold border border-gold/40 hover:border-gold hover:bg-black text-[11px] uppercase tracking-wider font-mono rounded-full transition-all shadow-sm cursor-pointer shrink-0 group self-start sm:self-auto"
+                >
+                  <span>Ouvrir dans Google Maps</span>
+                  <ExternalLink size={13} className="text-gold transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </motion.a>
+              </div>
+
+              <motion.p variants={itemVariants} className="font-serif text-[15px] font-light leading-relaxed tracking-wide text-ink/80 mb-6 max-w-2xl">
+                Idéalement située à Marcory Zone 4 à Abidjan, la résidence vous accueille dans un cadre exclusif et sécurisé, à proximité immédiate des commodités, des enseignes renommées et des tables gastronomiques de la capitale.
+              </motion.p>
+
+              {/* Module Interactif de Carte & Calcul d'Itinéraires (Inspiré Airbnb) */}
+              <motion.div variants={itemVariants}>
+                <NeighborhoodItineraryMap
+                  residence={residence}
+                  fullAddress={fullAddress}
+                  district={district}
+                  city={city}
+                />
               </motion.div>
             </section>
 
