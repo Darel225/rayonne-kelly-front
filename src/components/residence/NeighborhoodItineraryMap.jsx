@@ -63,6 +63,7 @@ export default function NeighborhoodItineraryMap({ residence, fullAddress, distr
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDestination, setSelectedDestination] = useState(null);
+  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
 
   // URL de l'iframe Google Maps selon le mode : Route tracée ou Vue centrée sur la résidence
   const mapIframeUrl = useMemo(() => {
@@ -122,18 +123,37 @@ export default function NeighborhoodItineraryMap({ residence, fullAddress, distr
         className="relative w-full h-[340px] sm:h-[380px] md:h-[410px] rounded-2xl sm:rounded-3xl overflow-hidden border border-black/10 shadow-[0_12px_36px_rgba(0,0,0,0.06)] bg-[#FAFAF8] isolate transform-gpu"
         style={{ borderRadius: '1.5rem', WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
       >
-        {/* Iframe Google Maps */}
+        {/* Placeholder / Skeleton de chargement immédiat ultra-fluide */}
+        <div 
+          className={`absolute inset-0 z-0 bg-[#F4F4F1] flex flex-col items-center justify-center transition-opacity duration-700 pointer-events-none ${
+            isIframeLoaded ? 'opacity-0' : 'opacity-100'
+          }`}
+        >
+          <div className="relative flex items-center justify-center mb-3">
+            <span className="animate-ping absolute inline-flex h-14 w-14 rounded-full bg-gold/20"></span>
+            <div className="relative w-12 h-12 rounded-full bg-night/90 border border-gold/40 text-gold flex items-center justify-center shadow-lg">
+              <Home size={18} className="text-gold" />
+            </div>
+          </div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-muted">
+            Chargement de la carte • {district || 'Marcory Zone 4'}
+          </div>
+        </div>
+
+        {/* Iframe Google Maps avec chargement instantané (eager) */}
         <iframe
-          key={mapIframeUrl}
           title={`Itinéraire depuis ${originAddress}`}
           width="100%"
           height="100%"
           style={{ border: 0, borderRadius: '1.5rem' }}
-          loading="lazy"
+          loading="eager"
           allowFullScreen
           referrerPolicy="no-referrer-when-downgrade"
           src={mapIframeUrl}
-          className="w-full h-full filter saturate-[0.95] contrast-[1.02]"
+          onLoad={() => setIsIframeLoaded(true)}
+          className={`w-full h-full filter saturate-[0.95] contrast-[1.02] transition-opacity duration-500 ${
+            isIframeLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
         />
 
         {/* Pin Signature Maison au centre de la carte (Style Airbnb - Vue Résidence) */}
