@@ -228,17 +228,28 @@ export default function ResidenceDetails() {
   const isPriceMasked = priceDisplay === 'on_demand' || !rawPrice;
 
   // Formatage chirurgical de la localisation & Google Maps
-  const rawDist = (residence?.district || residence?.location || '').trim().replace(/Macory/gi, 'Marcory');
-  const rawAddr = (residence?.address || '').trim().replace(/Macory/gi, 'Marcory');
+  const cleanDistrict = (str) => {
+    let s = (str || '').trim().replace(/Macory/gi, 'Marcory').replace(/zone\s*(\d+)/gi, 'Zone $1');
+    if (!s || s.toLowerCase() === 'abidjan') return 'Marcory Zone 4';
+    return s;
+  };
+
+  const cleanAddress = (str) => {
+    let s = (str || '').trim().replace(/Macory/gi, 'Marcory').replace(/zone\s*(\d+)/gi, 'Zone $1');
+    if (!s) return 'Marcory Zone 4, Abidjan';
+    return s;
+  };
+
+  const district = cleanDistrict(residence?.district || residence?.location);
+  const rawAddressCleaned = cleanAddress(residence?.address);
   const city = (residence?.city || 'Abidjan').trim();
 
-  const district = (!rawDist || rawDist.toLowerCase() === 'abidjan') ? 'Marcory Zone 4' : rawDist;
-  const fullAddress = rawAddr 
-    ? (rawAddr.toLowerCase().includes(city.toLowerCase()) ? rawAddr : `${rawAddr}, ${city}`)
-    : `${district}, ${city}`;
-  const mapSearchQuery = encodeURIComponent(`${fullAddress}, Côte d'Ivoire`);
-  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapSearchQuery}`;
-  const embedMapsUrl = `https://maps.google.com/maps?q=${mapSearchQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  const fullAddress = rawAddressCleaned.toLowerCase().includes('abidjan')
+    ? rawAddressCleaned
+    : `${rawAddressCleaned}, ${city}`;
+
+  const mapSearchQuery = encodeURIComponent(`Marcory Zone 4, Boulevard de Marseille, Abidjan, Côte d'Ivoire`);
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${fullAddress}, Côte d'Ivoire`)}`;
 
   // Détection automatique de l'atout prestige majeur
   const getPrestigeHighlight = () => {

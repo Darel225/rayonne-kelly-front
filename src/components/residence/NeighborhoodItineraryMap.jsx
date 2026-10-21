@@ -67,12 +67,21 @@ export default function NeighborhoodItineraryMap({ residence, fullAddress, distr
 
   // URL de l'iframe Google Maps selon le mode : Route tracée ou Vue centrée sur la résidence
   const mapIframeUrl = useMemo(() => {
-    const originEncoded = encodeURIComponent(originAddress);
     if (selectedDestination) {
+      const originClean = (originAddress || 'Marcory Zone 4, Abidjan')
+        .replace(/Macory/gi, 'Marcory')
+        .replace(/zone\s*(\d+)/gi, 'Zone $1');
+      const originEncoded = encodeURIComponent(
+        originClean.toLowerCase().includes('marseille') || originClean.toLowerCase().includes('décembre')
+          ? originClean
+          : `${originClean}, Boulevard de Marseille, Abidjan`
+      );
       const destEncoded = encodeURIComponent(selectedDestination.query || selectedDestination.name);
       return `https://maps.google.com/maps?saddr=${originEncoded}&daddr=${destEncoded}&output=embed`;
     }
-    return `https://maps.google.com/maps?q=${originEncoded}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    // Mode standard : centrage précis sur le cœur résidentiel et dynamique de Marcory Zone 4 (Bd de Marseille)
+    const centerQuery = encodeURIComponent(`Marcory Zone 4, Boulevard de Marseille, Abidjan, Côte d'Ivoire`);
+    return `https://maps.google.com/maps?q=${centerQuery}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
   }, [originAddress, selectedDestination]);
 
   // URL Google Maps externe pour GPS / itinéraire réel sur smartphone
@@ -174,7 +183,7 @@ export default function NeighborhoodItineraryMap({ residence, fullAddress, distr
         )}
 
         {/* Barre de Recherche Flottante (Style Airbnb dans la carte) */}
-        <div className="absolute top-4 left-4 right-4 sm:right-auto sm:w-80 md:w-88 z-20">
+        <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 right-2.5 sm:right-auto sm:w-84 md:w-92 z-20">
           <form 
             onSubmit={handleCustomSearchSubmit}
             className="bg-white/95 backdrop-blur-md rounded-full shadow-[0_8px_25px_rgba(0,0,0,0.12)] border border-black/10 flex items-center px-4 py-2 gap-2 transition-all focus-within:ring-2 focus-within:ring-gold/50"
